@@ -1,0 +1,21 @@
+admin@raspberrypi:~/Desktop/test_bcm2835/kurs_neuro_c $ gcc -Wall -o led gpioid.c -lgpiod
+gpioid.c: In function ‘main’:
+gpioid.c:31:12: warning: implicit declaration of function ‘gpiod_chip_get_line’; did you mean ‘gpiod_chip_get_info’? [-Wimplicit-function-declaration]
+   31 |     line = gpiod_chip_get_line(chip, LED_GPIO);
+      |            ^~~~~~~~~~~~~~~~~~~
+      |            gpiod_chip_get_info
+gpioid.c:31:10: warning: assignment to ‘struct gpiod_line *’ from ‘int’ makes pointer from integer without a cast [-Wint-conversion]
+   31 |     line = gpiod_chip_get_line(chip, LED_GPIO);
+      |          ^
+gpioid.c:39:11: warning: implicit declaration of function ‘gpiod_line_request_output’; did you mean ‘gpiod_line_request_get_fd’? [-Wimplicit-function-declaration]
+   39 |     ret = gpiod_line_request_output(line, "led_toggle", 0);
+      |           ^~~~~~~~~~~~~~~~~~~~~~~~~
+      |           gpiod_line_request_get_fd
+gpioid.c:51:15: warning: implicit declaration of function ‘gpiod_line_set_value’; did you mean ‘gpiod_line_request_set_value’? [-Wimplicit-function-declaration]
+   51 |         ret = gpiod_line_set_value(line, 1);
+      |               ^~~~~~~~~~~~~~~~~~~~
+      |               gpiod_line_request_set_value
+gpioid.c:68:5: warning: implicit declaration of function ‘gpiod_line_release’; did you mean ‘gpiod_line_request_release’? [-Wimplicit-function-declaration]
+   68 |     gpiod_line_release(line);
+      |     ^~~~~~~~~~~~~~~~~~
+      |     gpiod_line_request_release
