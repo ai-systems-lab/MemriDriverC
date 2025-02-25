@@ -74,7 +74,7 @@ int main(void) {
 
 
 //
-//gcc -Wall -o led led.c -lgpiod
+//gcc -Wall -o led gpioid.c -lgpiod
 //
 //
 //
