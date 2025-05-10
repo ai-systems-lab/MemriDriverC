@@ -1,0 +1,4 @@
+Metadata-Version: 2.1
+Name: gpio-c
+Version: 1.0
+Summary: GPIO модуль для Raspberry Pi на С

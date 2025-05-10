@@ -4,11 +4,3 @@ pip install -e .
 
 #sudo python3 setup.py install
 
-error: subprocess-exited-with-error
-  
-  × python setup.py egg_info did not run successfully.
-  │ exit code: 1
-  ╰─> [2 lines of output]
-      running egg_info
-      error: Invalid distribution name or version syntax: gpio--1.0
-      [end of output]

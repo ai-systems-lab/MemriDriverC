@@ -1,0 +1,6 @@
+gpio_module.c
+setup.py
+gpio_c.egg-info/PKG-INFO
+gpio_c.egg-info/SOURCES.txt
+gpio_c.egg-info/dependency_links.txt
+gpio_c.egg-info/top_level.txt
