@@ -105,16 +105,18 @@ static PyObject *py_gpio_setup(PyObject *self, PyObject *args) {
 static PyObject *py_gpio_set(PyObject *self, PyObject *args) {
     void *line_ptr;
     int value;
-    if (!PyArg_ParseTuple(args, "pi", &line_ptr, &value)) {
+    // Используйте 'L' для unsigned long вместо 'p' (для 64-битных систем)
+    if (!PyArg_ParseTuple(args, "Li", &line_ptr, &value)) {
+        PyErr_SetString(PyExc_TypeError, "Invalid arguments!");
         return NULL;
     }
 
+    printf("Received line pointer: %p\n", line_ptr);  // Должно совпадать с 0x307a74f0
     struct gpiod_line *line = (struct gpiod_line *)line_ptr;
     if (gpio_line_set(line, value) < 0) {
-        PyErr_SetString(PyExc_RuntimeError, "Не удалось установить значение GPIO");
+        PyErr_SetString(PyExc_RuntimeError, "Failed to set GPIO value");
         return NULL;
     }
-
     Py_RETURN_NONE;
 }
 
