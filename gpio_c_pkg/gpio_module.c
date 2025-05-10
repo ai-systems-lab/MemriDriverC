@@ -10,7 +10,6 @@
 #define CHIP_PATH "/dev/gpiochip0"
 static struct gpiod_chip *global_chip = NULL;
 
-// === Оригинальные функции из вашего кода ===
 int gpio_init() {
     printf("Trying to open GPIO chip...\n");
     global_chip = gpiod_chip_open(CHIP_PATH);
@@ -72,7 +71,6 @@ void gpio_line_release(struct gpiod_line *line) {
     if (line) gpiod_line_release(line);
 }
 
-// === Python-обёртки ===
 static PyObject *py_gpio_init(PyObject *self, PyObject *args) {
     if (gpio_init() < 0) {
         PyErr_SetString(PyExc_RuntimeError, "Не удалось инициализировать GPIO");
@@ -111,7 +109,7 @@ static PyObject *py_gpio_set(PyObject *self, PyObject *args) {
         return NULL;
     }
 
-    printf("Received line pointer: %p\n", line_ptr);  // Должно совпадать с 0x307a74f0
+    printf("Received line pointer: %p\n", line_ptr);  
     struct gpiod_line *line = (struct gpiod_line *)line_ptr;
     if (gpio_line_set(line, value) < 0) {
         PyErr_SetString(PyExc_RuntimeError, "Failed to set GPIO value");

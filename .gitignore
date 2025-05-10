@@ -1,2 +1,6 @@
 kurs_lib/.venv
 kurs_lib/build  
+gpio_c_pkg/build
+gpio_c_pkg/dist
+gpio_c_pkg/.pkg_venv
+gpio_c_pkg/gpio_module.egg*
