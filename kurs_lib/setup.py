@@ -1,7 +1,7 @@
 from setuptools import setup, Extension
 
 module = Extension(
-    'gpio',
+    'gpio_с', # отвечает за то что пишется в import
     sources=['gpio_module.c'],
     libraries=['gpiod'],  # Указываем линковку с libgpiod
 )
