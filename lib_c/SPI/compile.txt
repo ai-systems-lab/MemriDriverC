@@ -1,0 +1,1 @@
+gcc -o spi_manual_cp spi_manual_cs.c -lwiringPi

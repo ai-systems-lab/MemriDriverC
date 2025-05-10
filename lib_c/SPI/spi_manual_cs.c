@@ -22,11 +22,7 @@
  // ========== ГЛОБАЛЬНЫЕ ПЕРЕМЕННЫЕ ==========
  int spi_fd;  // Файловый дескриптор SPI
  
- // ========== ПРОТОТИПЫ ФУНКЦИЙ ==========
- void init_spi(int bus, int channel, int mode, int speed);
- void send_spi_data(uint8_t *data, int len);
- void close_spi();
- 
+
  /**
   * Инициализация SPI
   * @param bus     - номер шины SPI (0 или 1)
@@ -90,7 +86,7 @@
          .tx_buf = (unsigned long)data,
          .rx_buf = (unsigned long)data,
          .len = len,
-         .delay_usecs = 10,
+         .delay_usecs = 0, // задержка после отправки 
          .speed_hz = 0,    // Используем установленную скорость
          .bits_per_word = 8,
          .cs_change = 0    // Не изменять CS между передачами
@@ -98,7 +94,7 @@
  
      // Активируем устройство
      digitalWrite(CS_PIN, LOW);
-     usleep(10);  // Короткая задержка
+     //usleep(10);  // Короткая задержка
  
      // Выводим отправляемые данные
      printf("Отправка %d байт: [", len);
@@ -135,10 +131,17 @@
      init_spi(SPI_BUS, SPI_CHANNEL, SPI_MODE, SPI_SPEED);
  
      // Тестовые данные
-     uint8_t test_data[] = {0x12, 0x34, 0x56, 0x78};
+     uint8_t test_data[] = {0x12, 0x34};
+     uint8_t test_data2[] = {0x12, 0x34};
      
      printf("\n===== Тестовая передача =====\n");
      send_spi_data(test_data, sizeof(test_data));
+
+     printf("\n===== Другой SPI MODE =====\n");
+     init_spi(SPI_BUS, SPI_CHANNEL, 2, SPI_SPEED);
+     printf("\n===== Тестовая передача =====\n");
+     send_spi_data(test_data2, sizeof(test_data2));
+
  
      printf("\n===== Завершение работы =====\n");
      close_spi();
