@@ -7,8 +7,8 @@ module = Extension(
 )
 
 setup(
-    name='gpio_с',
-    version='0.1',
-    description='GPIO модуль для Raspberry Pi на С',
+    name='gpio_с', # имя пакета
+    version='0.1.0', # версия
+    description='GPIO модуль для Raspberry Pi на С', # описание
     ext_modules=[module],
 )
