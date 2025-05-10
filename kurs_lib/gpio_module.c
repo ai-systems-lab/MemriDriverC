@@ -12,11 +12,13 @@ static struct gpiod_chip *global_chip = NULL;
 
 // === Оригинальные функции из вашего кода ===
 int gpio_init() {
+    printf("Trying to open GPIO chip...\n");
     global_chip = gpiod_chip_open(CHIP_PATH);
     if (!global_chip) {
-        fprintf(stderr, "Ошибка открытия чипа: %s\n", strerror(errno));
+        fprintf(stderr, "Error opening chip: %s\n", strerror(errno));
         return -1;
     }
+    printf("Successfully opened GPIO chip\n");
     return 0;
 }
 
@@ -49,7 +51,11 @@ struct gpiod_line *gpio_line_setup(int gpio_pin) {
 }
 
 int gpio_line_set(struct gpiod_line *line, int value) {
-    if (!line) return -1;
+    if (!line) {
+        fprintf(stderr, "Line is NULL!\n");
+        return -1;
+    }
+    printf("Setting line %p to %d\n", line, value);
     return gpiod_line_set_value(line, value);
 }
 
