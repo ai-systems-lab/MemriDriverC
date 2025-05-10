@@ -31,32 +31,41 @@ void gpio_deinit() {
 
 struct gpiod_line *gpio_line_setup(int gpio_pin) {
     if (!global_chip) {
-        fprintf(stderr, "Ошибка: Чип GPIO не инициализирован.\n");
+        fprintf(stderr, "GPIO chip not initialized!\n");
         return NULL;
     }
 
     struct gpiod_line *line = gpiod_chip_get_line(global_chip, gpio_pin);
     if (!line) {
-        fprintf(stderr, "Ошибка получения линии: %s\n", strerror(errno));
+        fprintf(stderr, "Failed to get line %d: %s\n", gpio_pin, strerror(errno));
         return NULL;
     }
 
+    // Запрашиваем линию как выход с начальным значением 0
     if (gpiod_line_request_output(line, "python_gpio", 0) < 0) {
-        fprintf(stderr, "Ошибка запроса линии: %s\n", strerror(errno));
+        fprintf(stderr, "Failed to request line %d: %s\n", gpio_pin, strerror(errno));
         gpiod_line_release(line);
         return NULL;
     }
 
+    printf("Line %d setup successfully: %p\n", gpio_pin, line);
     return line;
 }
 
 int gpio_line_set(struct gpiod_line *line, int value) {
     if (!line) {
-        fprintf(stderr, "Line is NULL!\n");
+        fprintf(stderr, "Line is NULL in gpio_line_set!\n");
         return -1;
     }
-    printf("Setting line %p to %d\n", line, value);
-    return gpiod_line_set_value(line, value);
+
+    printf("Attempting to set line %p to %d...\n", line, value);
+    int ret = gpiod_line_set_value(line, value);
+    if (ret < 0) {
+        fprintf(stderr, "Failed to set line: %s\n", strerror(errno));
+    } else {
+        printf("Line set successfully\n");
+    }
+    return ret;
 }
 
 void gpio_line_release(struct gpiod_line *line) {
