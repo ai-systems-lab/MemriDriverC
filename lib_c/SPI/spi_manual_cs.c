@@ -1,164 +1,147 @@
 /**
- * Программа для работы с SPI на Raspberry Pi с поддержкой всех 4 режимов
- * Подробные комментарии объясняют каждую часть кода
+ * Полная реализация SPI для Raspberry Pi
+ * С поддержкой всех 4 режимов и выбора канала через SPI_CHANNEL
  */
 
-// Подключаем необходимые библиотеки
-#include <wiringPi.h>          // Для работы с GPIO (управление CS-пином)
-#include <linux/spi/spidev.h>  // Для низкоуровневого управления SPI через ioctl
-#include <fcntl.h>             // Для функции open()
-#include <sys/ioctl.h>         // Для функции ioctl()
-#include <stdio.h>             // Для функций ввода/вывода (printf)
-#include <stdint.h>            // Для стандартных типов данных (uint8_t)
-#include <unistd.h>            // Для usleep()
-#include <string.h>            // Для memset()
-
-// Определяем константы
-#define SPI_DEVICE "/dev/spidev0.0"  // Путь к SPI-устройству (канал 0)
-#define CS_PIN 17                    // GPIO17 для Chip Select (CS)
-#define DEFAULT_SPI_SPEED 1000000    // Скорость по умолчанию (1 МГц)
-
-// Глобальная переменная для файлового дескриптора SPI
-int spi_fd;
-
-/**
- * Функция инициализации SPI
- * @param mode - режим SPI (0-3)
- * @param speed - скорость SPI в Гц
- */
-void init_spi(int mode, int speed) {
-    // 1. Инициализация библиотеки wiringPi
-    // wiringPiSetupGpio() использует нумерацию GPIO Broadcom
-    if (wiringPiSetupGpio() == -1) {
-        printf("[ОШИБКА] Не удалось инициализировать wiringPi\n");
-        return;
-    }
-
-    // 2. Настройка CS-пина (Chip Select)
-    // CS обычно активен в LOW, поэтому изначально устанавливаем HIGH
-    pinMode(CS_PIN, OUTPUT);          // Настраиваем пин как выход
-    digitalWrite(CS_PIN, HIGH);       // Устанавливаем HIGH (неактивное состояние)
-    printf("CS-пин (GPIO%d) настроен как выход\n", CS_PIN);
-
-    // 3. Открываем SPI-устройство
-    // O_RDWR - открываем для чтения и записи
-    spi_fd = open(SPI_DEVICE, O_RDWR);
-    if (spi_fd < 0) {
-        printf("[ОШИБКА] Не удалось открыть SPI устройство %s\n", SPI_DEVICE);
-        return;
-    }
-    printf("SPI устройство %s успешно открыто\n", SPI_DEVICE);
-
-    // 4. Устанавливаем режим SPI (CPOL и CPHA)
-    // SPI_IOC_WR_MODE - команда для установки режима
-    if (ioctl(spi_fd, SPI_IOC_WR_MODE, &mode) < 0) {
-        printf("[ОШИБКА] Не удалось установить режим SPI\n");
-        return;
-    }
-    printf("Режим SPI установлен: %d (CPOL=%d, CPHA=%d)\n", 
-           mode, mode >> 1, mode & 0x01);
-
-    // 5. Устанавливаем скорость передачи
-    // SPI_IOC_WR_MAX_SPEED_HZ - команда для установки скорости
-    if (ioctl(spi_fd, SPI_IOC_WR_MAX_SPEED_HZ, &speed) < 0) {
-        printf("[ОШИБКА] Не удалось установить скорость SPI\n");
-        return;
-    }
-    printf("Скорость SPI установлена: %d Гц (%.1f МГц)\n", 
-           speed, speed / 1000000.0);
-
-    // 6. (Опционально) Устанавливаем дополнительные параметры
-    int bits_per_word = 8;  // Стандартный размер слова - 8 бит
-    if (ioctl(spi_fd, SPI_IOC_WR_BITS_PER_WORD, &bits_per_word) < 0) {
-        printf("[ОШИБКА] Не удалось установить размер слова SPI\n");
-        return;
-    }
-    printf("Размер слова SPI: %d бит\n", bits_per_word);
-
-    // 7. (Опционально) Устанавливаем порядок битов (MSB first)
-    int lsb_first = 0;  // 0 - MSB first (стандарт), 1 - LSB first
-    if (ioctl(spi_fd, SPI_IOC_WR_LSB_FIRST, &lsb_first) < 0) {
-        printf("[ОШИБКА] Не удалось установить порядок битов SPI\n");
-        return;
-    }
-    printf("Порядок битов: %s\n", lsb_first ? "LSB first" : "MSB first");
-}
-
-/**
- * Функция для отправки данных по SPI
- * @param data - указатель на массив данных
- * @param len - количество байт для отправки
- */
-void send_spi_data(uint8_t *data, int len) {
-    // Структура для настройки параметров передачи SPI
-    struct spi_ioc_transfer spi;
-    
-    // Обнуляем структуру перед использованием
-    memset(&spi, 0, sizeof(spi));
-
-    // Настраиваем параметры передачи:
-    spi.tx_buf = (unsigned long)data;  // Буфер для передачи данных
-    spi.rx_buf = (unsigned long)data;  // Буфер для приема данных (может быть NULL)
-    spi.len = len;                     // Количество байт для передачи
-    spi.delay_usecs = 10;              // Задержка после передачи (микросекунды)
-    spi.speed_hz = 0;                  // 0 - использовать скорость по умолчанию
-    spi.bits_per_word = 8;             // Размер слова (обычно 8 бит)
-    spi.cs_change = 0;                 // Не изменять состояние CS после передачи
-
-    // Активируем устройство - устанавливаем CS в LOW
-    digitalWrite(CS_PIN, LOW);
-    
-    // Небольшая задержка для стабилизации сигнала
-    usleep(10);
-
-    // Выводим отправляемые данные для отладки
-    printf("Отправка %d байт: ", len);
-    for (int i = 0; i < len; i++) {
-        printf("0x%02X ", data[i]);
-    }
-    printf("\n");
-
-    // Отправляем данные через SPI
-    // SPI_IOC_MESSAGE(1) - отправляем один пакет данных
-    if (ioctl(spi_fd, SPI_IOC_MESSAGE(1), &spi) < 0) {
-        printf("[ОШИБКА] Ошибка передачи данных по SPI\n");
-    }
-
-    // Деактивируем устройство - устанавливаем CS в HIGH
-    digitalWrite(CS_PIN, HIGH);
-    
-    // Небольшая задержка между передачами
-    usleep(10);
-}
-
-/**
- * Главная функция программы
- */
-int main() {
-    // Настройки SPI по умолчанию
-    int spi_mode = 0;       // Режим SPI (0-3)
-    int spi_speed = DEFAULT_SPI_SPEED;  // Скорость 1 МГц
-
-    printf("\n=== Инициализация SPI ===\n");
-    
-    // Инициализируем SPI с выбранными параметрами
-    init_spi(spi_mode, spi_speed);
-
-    // Подготавливаем тестовые данные для отправки
-    uint8_t test_data[2] = {0x12, 0x34};
-
-    printf("\n=== Тестовая передача данных ===\n");
-    
-    // Отправляем данные
-    send_spi_data(test_data, sizeof(test_data));
-
-    printf("\n=== Завершение работы ===\n");
-    
-    // Закрываем SPI-устройство
-    if (spi_fd >= 0) {
-        close(spi_fd);
-        printf("SPI устройство закрыто\n");
-    }
-
-    return 0;
-}
+ #include <wiringPi.h>
+ #include <linux/spi/spidev.h>
+ #include <fcntl.h>
+ #include <sys/ioctl.h>
+ #include <stdio.h>
+ #include <stdint.h>
+ #include <unistd.h>
+ #include <string.h>
+ 
+ // ========== КОНФИГУРАЦИЯ ==========
+ #define SPI_BUS         0       // 0 (SPI0) или 1 (SPI1)
+ #define SPI_CHANNEL     0       // 0 или 1 (канал SPI)
+ #define CS_PIN         17       // GPIO для Chip Select
+ #define SPI_SPEED   1000000     // Скорость по умолчанию (1 МГц)
+ #define SPI_MODE        0       // Режим SPI по умолчанию (0-3)
+ 
+ // ========== ГЛОБАЛЬНЫЕ ПЕРЕМЕННЫЕ ==========
+ int spi_fd;  // Файловый дескриптор SPI
+ 
+ // ========== ПРОТОТИПЫ ФУНКЦИЙ ==========
+ void init_spi(int bus, int channel, int mode, int speed);
+ void send_spi_data(uint8_t *data, int len);
+ void close_spi();
+ 
+ /**
+  * Инициализация SPI
+  * @param bus     - номер шины SPI (0 или 1)
+  * @param channel - номер канала (0 или 1)
+  * @param mode    - режим SPI (0-3)
+  * @param speed   - скорость в Гц
+  */
+ void init_spi(int bus, int channel, int mode, int speed) {
+     // 1. Формируем путь к устройству SPI
+     char spi_device[20];
+     snprintf(spi_device, sizeof(spi_device), "/dev/spidev%d.%d", bus, channel);
+ 
+     // 2. Инициализация GPIO
+     if (wiringPiSetupGpio() == -1) {
+         fprintf(stderr, "ERROR: Не удалось инициализировать wiringPi\n");
+         return;
+     }
+ 
+     // 3. Настройка CS-пина
+     pinMode(CS_PIN, OUTPUT);
+     digitalWrite(CS_PIN, HIGH);  // Деактивируем CS
+     printf("Настроен CS на GPIO%d\n", CS_PIN);
+ 
+     // 4. Открываем устройство SPI
+     spi_fd = open(spi_device, O_RDWR);
+     if (spi_fd < 0) {
+         fprintf(stderr, "ERROR: Не удалось открыть %s\n", spi_device);
+         return;
+     }
+     printf("Открыто SPI устройство: %s\n", spi_device);
+ 
+     // 5. Устанавливаем режим SPI
+     if (ioctl(spi_fd, SPI_IOC_WR_MODE, &mode) < 0) {
+         fprintf(stderr, "ERROR: Не удалось установить режим SPI\n");
+         return;
+     }
+     printf("Режим SPI: %d (CPOL=%d, CPHA=%d)\n", 
+            mode, (mode >> 1) & 0x01, mode & 0x01);
+ 
+     // 6. Устанавливаем скорость
+     if (ioctl(spi_fd, SPI_IOC_WR_MAX_SPEED_HZ, &speed) < 0) {
+         fprintf(stderr, "ERROR: Не удалось установить скорость SPI\n");
+         return;
+     }
+     printf("Скорость SPI: %d Hz (%.1f MHz)\n", speed, speed/1000000.0);
+ 
+     // 7. Дополнительные настройки
+     uint8_t bits = 8;  // 8 бит на слово
+     if (ioctl(spi_fd, SPI_IOC_WR_BITS_PER_WORD, &bits) < 0) {
+         fprintf(stderr, "WARNING: Не удалось установить размер слова\n");
+     }
+ }
+ 
+ /**
+  * Отправка данных по SPI
+  * @param data - указатель на данные
+  * @param len  - количество байт
+  */
+ void send_spi_data(uint8_t *data, int len) {
+     struct spi_ioc_transfer spi = {
+         .tx_buf = (unsigned long)data,
+         .rx_buf = (unsigned long)data,
+         .len = len,
+         .delay_usecs = 10,
+         .speed_hz = 0,    // Используем установленную скорость
+         .bits_per_word = 8,
+         .cs_change = 0    // Не изменять CS между передачами
+     };
+ 
+     // Активируем устройство
+     digitalWrite(CS_PIN, LOW);
+     usleep(10);  // Короткая задержка
+ 
+     // Выводим отправляемые данные
+     printf("Отправка %d байт: [", len);
+     for (int i = 0; i < len; i++) {
+         printf("0x%02X%s", data[i], (i < len-1) ? ", " : "");
+     }
+     printf("]\n");
+ 
+     // Отправляем данные
+     if (ioctl(spi_fd, SPI_IOC_MESSAGE(1), &spi) < 0) {
+         fprintf(stderr, "ERROR: Ошибка передачи SPI\n");
+     }
+ 
+     // Деактивируем устройство
+     digitalWrite(CS_PIN, HIGH);
+     usleep(10);
+ }
+ 
+ /**
+  * Закрытие SPI
+  */
+ void close_spi() {
+     if (spi_fd >= 0) {
+         close(spi_fd);
+         printf("SPI устройство закрыто\n");
+     }
+ }
+ 
+ /**
+  * Главная функция
+  */
+ int main() {
+     printf("\n===== Инициализация SPI =====\n");
+     init_spi(SPI_BUS, SPI_CHANNEL, SPI_MODE, SPI_SPEED);
+ 
+     // Тестовые данные
+     uint8_t test_data[] = {0x12, 0x34, 0x56, 0x78};
+     
+     printf("\n===== Тестовая передача =====\n");
+     send_spi_data(test_data, sizeof(test_data));
+ 
+     printf("\n===== Завершение работы =====\n");
+     close_spi();
+ 
+     return 0;
+ }
