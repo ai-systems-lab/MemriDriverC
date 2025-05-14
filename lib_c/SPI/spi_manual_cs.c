@@ -112,6 +112,38 @@
          fprintf(stderr, "WARNING: Не удалось установить размер слова\n");
      }
  }
+
+ /**
+ * Устанавливает порядок бит (LSB first / MSB first)
+ * @param lsb_first - 1 для LSB first, 0 для MSB first
+ */
+void set_spi_bit_order(uint8_t lsb_first) {
+    if (spi_fd < 0) {
+        fprintf(stderr, "SPI не инициализирован!\n");
+        return;
+    }
+
+    if (ioctl(spi_fd, SPI_IOC_WR_LSB_FIRST, &lsb_first) < 0) {
+        perror("Ошибка установки порядка бит");
+        return;
+    }
+
+    // Проверка
+    uint8_t check;
+    if (ioctl(spi_fd, SPI_IOC_RD_LSB_FIRST, &check) < 0) {
+        perror("Ошибка чтения порядка бит");
+        return;
+    }
+
+    if (check != lsb_first) {
+        fprintf(stderr, "Порядок бит не изменился! Текущий: %s\n",
+                check ? "LSB first" : "MSB first");
+    } else {
+        current_bit_order = check;
+        printf("Порядок бит установлен: %s\n",
+               check ? "LSB first" : "MSB first");
+    }
+}
  
  /**
   * Отправка данных по SPI
