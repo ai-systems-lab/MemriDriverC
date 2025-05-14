@@ -28,7 +28,7 @@
   * Функция изменения режима SPI без переинициализации
   * @param mode - новый режим SPI (0-3)
   */
- void set_spi_mode(int mode) {
+ void set_spi_mode(uint8_t mode) {
      if (spi_fd < 0) {
          fprintf(stderr, "SPI не инициализирован!\n");
          return;
@@ -44,7 +44,7 @@
      }
  
      // Проверяем, что режим установился
-     int read_mode;
+     uint8_t read_mode;
      if (ioctl(spi_fd, SPI_IOC_RD_MODE, &read_mode) < 0) {
          perror("Ошибка чтения режима SPI");
          return;
