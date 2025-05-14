@@ -17,12 +17,14 @@
  #define SPI_BUS         0       // 0 (SPI0) или 1 (SPI1)
  #define SPI_CHANNEL     0       // 0 или 1 (канал SPI)
  #define CS_PIN         17       // GPIO для Chip Select
+ #define GPIO_PIN       22       // ldac 
  #define SPI_SPEED   1000000     // Скорость по умолчанию (1 МГц)
  #define SPI_MODE        0       // Режим SPI по умолчанию (0-3)
  
  // ========== ГЛОБАЛЬНЫЕ ПЕРЕМЕННЫЕ ==========
  int spi_fd;  // Файловый дескриптор SPI
  int current_spi_mode; // Текущий режим SPI
+ uint8_t current_bit_order;
  
  /**
   * Функция изменения режима SPI без переинициализации
@@ -80,6 +82,10 @@
      // 3. Настройка CS-пина
      pinMode(CS_PIN, OUTPUT);
      digitalWrite(CS_PIN, HIGH);  // Деактивируем CS
+     //pinMode(10, OUTPUT);
+     //pinMode
+     pinMode(GPIO_PIN, OUTPUT);
+     digitalWrite(GPIO_PIN, HIGH);
      printf("Настроен CS на GPIO%d\n", CS_PIN);
  
      // 4. Открываем устройство SPI
@@ -178,7 +184,11 @@ void set_spi_bit_order(uint8_t lsb_first) {
  
      // Деактивируем устройство
      digitalWrite(CS_PIN, HIGH);
+
+     digitalWrite(GPIO_PIN, LOW);
      usleep(10);
+     digitalWrite(GPIO_PIN, HIGH);
+     //usleep(10);
  }
  
  /**
@@ -197,28 +207,38 @@ void set_spi_bit_order(uint8_t lsb_first) {
  int main() {
       printf("\n===== Инициализация SPI =====\n");
       init_spi(SPI_BUS, SPI_CHANNEL, SPI_MODE, SPI_SPEED);
- 
+      set_spi_bit_order(1); // 0 - msb -1 - lsb
       // Тестовые данные
-      uint8_t test_data[] = {0x12, 0x34};
+      uint8_t test_data[] = {0b00000000, 0b00111110};
       uint8_t test_data2[] = {0x56, 0x78};
-      
+      //100 0000000 00 0000000 00 
       printf("\n===== Тестовая передача =====\n");
       send_spi_data(test_data, sizeof(test_data));
  
-      printf("\n===== Смена режима на 2 =====\n");
-      set_spi_mode(2);  // Меняем режим без переинициализации
+    //   printf("\n===== Смена режима на 2 =====\n");
+    //   set_spi_mode(2);  // Меняем режим без переинициализации
       
-      printf("\n===== Тестовая передача в новом режиме =====\n");
-      send_spi_data(test_data2, sizeof(test_data2));
+    //   printf("\n===== Тестовая передача в новом режиме =====\n");
+    //   send_spi_data(test_data2, sizeof(test_data2));
  
-      printf("\n===== Возврат в режим 0 =====\n");
-      set_spi_mode(0);
+    //   printf("\n===== Возврат в режим 0 =====\n");
+    //   set_spi_mode(0);
       
-      printf("\n===== Тестовая передача =====\n");
-      send_spi_data(test_data, sizeof(test_data));
+    //   printf("\n===== Тестовая передача =====\n");
+    //   send_spi_data(test_data, sizeof(test_data));
  
-      printf("\n===== Завершение работы =====\n");
-      close_spi();
+    //   printf("\n===== Завершение работы =====\n");
+    //   close_spi();
  
       return 0;
  }
+
+ //===== Инициализация SPI =====
+// Настроен CS на GPIO17
+// Открыто SPI устройство: /dev/spidev0.0
+// Режим SPI: 0 (CPOL=0, CPHA=0)
+// Скорость SPI: 1000000 Hz (1.0 MHz)
+// Ошибка установки порядка бит: Invalid argument
+
+// ===== Тестовая передача =====
+// Отправка 2 байт в режиме 0: [0x00, 0x3E]
