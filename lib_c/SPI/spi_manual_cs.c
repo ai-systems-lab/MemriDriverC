@@ -1,6 +1,7 @@
 /**
  * Полная реализация SPI для Raspberry Pi
  * С поддержкой всех 4 режимов и выбора канала через SPI_CHANNEL
+ * Добавлена функция смены режима SPI без переинициализации
  */
 
  #include <wiringPi.h>
@@ -21,8 +22,43 @@
  
  // ========== ГЛОБАЛЬНЫЕ ПЕРЕМЕННЫЕ ==========
  int spi_fd;  // Файловый дескриптор SPI
+ int current_spi_mode; // Текущий режим SPI
  
-
+ /**
+  * Функция изменения режима SPI без переинициализации
+  * @param mode - новый режим SPI (0-3)
+  */
+ void set_spi_mode(int mode) {
+     if (spi_fd < 0) {
+         fprintf(stderr, "SPI не инициализирован!\n");
+         return;
+     }
+ 
+     // Убедимся, что CS неактивен перед сменой режима
+     digitalWrite(CS_PIN, HIGH);
+     usleep(10); // Короткая пауза
+ 
+     if (ioctl(spi_fd, SPI_IOC_WR_MODE, &mode) < 0) {
+         perror("Ошибка смены режима SPI");
+         return;
+     }
+ 
+     // Проверяем, что режим установился
+     int read_mode;
+     if (ioctl(spi_fd, SPI_IOC_RD_MODE, &read_mode) < 0) {
+         perror("Ошибка чтения режима SPI");
+         return;
+     }
+ 
+     if (read_mode != mode) {
+         fprintf(stderr, "Режим не изменился! Текущий: %d\n", read_mode);
+     } else {
+         current_spi_mode = mode;
+         printf("Режим SPI изменен на %d (CPOL=%d, CPHA=%d)\n",
+                mode, (mode >> 1) & 0x01, mode & 0x01);
+     }
+ }
+ 
  /**
   * Инициализация SPI
   * @param bus     - номер шины SPI (0 или 1)
@@ -59,6 +95,7 @@
          fprintf(stderr, "ERROR: Не удалось установить режим SPI\n");
          return;
      }
+     current_spi_mode = mode;
      printf("Режим SPI: %d (CPOL=%d, CPHA=%d)\n", 
             mode, (mode >> 1) & 0x01, mode & 0x01);
  
@@ -94,10 +131,9 @@
  
      // Активируем устройство
      digitalWrite(CS_PIN, LOW);
-     //usleep(10);  // Короткая задержка
  
      // Выводим отправляемые данные
-     printf("Отправка %d байт: [", len);
+     printf("Отправка %d байт в режиме %d: [", len, current_spi_mode);
      for (int i = 0; i < len; i++) {
          printf("0x%02X%s", data[i], (i < len-1) ? ", " : "");
      }
@@ -112,38 +148,6 @@
      digitalWrite(CS_PIN, HIGH);
      usleep(10);
  }
-
- /**
- * Функция для изменения режима SPI "на лету"
- * @param mode - новый режим (0-3)
- */
-void set_spi_mode(int mode) {
-    // Проверяем что файловый дескриптор валиден
-    if (spi_fd < 0) {
-        fprintf(stderr, "SPI не инициализирован!\n");
-        return;
-    }
-
-    // Устанавливаем новый режим
-    if (ioctl(spi_fd, SPI_IOC_WR_MODE, &mode) < 0) {
-        perror("Ошибка смены режима SPI");
-        return;
-    }
-
-    // Проверяем что режим установился
-    int current_mode;
-    if (ioctl(spi_fd, SPI_IOC_RD_MODE, &current_mode) < 0) {
-        perror("Ошибка чтения режима SPI");
-        return;
-    }
-
-    if (current_mode != mode) {
-        fprintf(stderr, "Режим не изменился! Текущий: %d\n", current_mode);
-    } else {
-        printf("Режим SPI изменен на %d (CPOL=%d, CPHA=%d)\n",
-               mode, (mode >> 1) & 0x01, mode & 0x01);
-    }
-}
  
  /**
   * Закрытие SPI
@@ -159,24 +163,30 @@ void set_spi_mode(int mode) {
   * Главная функция
   */
  int main() {
-     printf("\n===== Инициализация SPI =====\n");
-     init_spi(SPI_BUS, SPI_CHANNEL, SPI_MODE, SPI_SPEED);
+      printf("\n===== Инициализация SPI =====\n");
+      init_spi(SPI_BUS, SPI_CHANNEL, SPI_MODE, SPI_SPEED);
  
-     // Тестовые данные
-     uint8_t test_data[] = {0x12, 0x34};
-     uint8_t test_data2[] = {0x12, 0x34};
-     
-     printf("\n===== Тестовая передача =====\n");
-     send_spi_data(test_data, sizeof(test_data));
-
-     printf("\n===== Другой SPI MODE =====\n");
-     set_spi_mode(3)
-     printf("\n===== Тестовая передача =====\n");
-     send_spi_data(test_data2, sizeof(test_data2));
-
+      // Тестовые данные
+      uint8_t test_data[] = {0x12, 0x34};
+      uint8_t test_data2[] = {0x56, 0x78};
+      
+      printf("\n===== Тестовая передача =====\n");
+      send_spi_data(test_data, sizeof(test_data));
  
-     printf("\n===== Завершение работы =====\n");
-     close_spi();
+      printf("\n===== Смена режима на 2 =====\n");
+      set_spi_mode(2);  // Меняем режим без переинициализации
+      
+      printf("\n===== Тестовая передача в новом режиме =====\n");
+      send_spi_data(test_data2, sizeof(test_data2));
  
-     return 0;
+      printf("\n===== Возврат в режим 0 =====\n");
+      set_spi_mode(0);
+      
+      printf("\n===== Тестовая передача =====\n");
+      send_spi_data(test_data, sizeof(test_data));
+ 
+      printf("\n===== Завершение работы =====\n");
+      close_spi();
+ 
+      return 0;
  }
