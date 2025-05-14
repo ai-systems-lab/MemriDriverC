@@ -112,6 +112,38 @@
      digitalWrite(CS_PIN, HIGH);
      usleep(10);
  }
+
+ /**
+ * Функция для изменения режима SPI "на лету"
+ * @param mode - новый режим (0-3)
+ */
+void set_spi_mode(int mode) {
+    // Проверяем что файловый дескриптор валиден
+    if (spi_fd < 0) {
+        fprintf(stderr, "SPI не инициализирован!\n");
+        return;
+    }
+
+    // Устанавливаем новый режим
+    if (ioctl(spi_fd, SPI_IOC_WR_MODE, &mode) < 0) {
+        perror("Ошибка смены режима SPI");
+        return;
+    }
+
+    // Проверяем что режим установился
+    int current_mode;
+    if (ioctl(spi_fd, SPI_IOC_RD_MODE, &current_mode) < 0) {
+        perror("Ошибка чтения режима SPI");
+        return;
+    }
+
+    if (current_mode != mode) {
+        fprintf(stderr, "Режим не изменился! Текущий: %d\n", current_mode);
+    } else {
+        printf("Режим SPI изменен на %d (CPOL=%d, CPHA=%d)\n",
+               mode, (mode >> 1) & 0x01, mode & 0x01);
+    }
+}
  
  /**
   * Закрытие SPI
@@ -138,7 +170,7 @@
      send_spi_data(test_data, sizeof(test_data));
 
      printf("\n===== Другой SPI MODE =====\n");
-     init_spi(SPI_BUS, SPI_CHANNEL, 2, SPI_SPEED);
+     set_spi_mode(3)
      printf("\n===== Тестовая передача =====\n");
      send_spi_data(test_data2, sizeof(test_data2));
 
