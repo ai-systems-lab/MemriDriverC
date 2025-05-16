@@ -190,6 +190,41 @@ void set_spi_bit_order(uint8_t lsb_first) {
      digitalWrite(GPIO_PIN, HIGH);
      //usleep(10);
  }
+
+ /**
+ * Прием данных по SPI
+ * @param data - указатель на буфер для приема данных
+ * @param len  - количество байт для приема
+ */
+void receive_spi_data(uint8_t *data, int len) {
+    struct spi_ioc_transfer spi = {
+        .tx_buf = 0,            // Не отправляем данные
+        .rx_buf = (unsigned long)data,
+        .len = len,
+        .delay_usecs = 0,
+        .speed_hz = 0,          // Используем установленную скорость
+        .bits_per_word = 8,
+        .cs_change = 0          // Не изменять CS между передачами
+    };
+
+    // Активируем устройство
+    digitalWrite(CS_PIN, LOW);
+
+    // Принимаем данные
+    if (ioctl(spi_fd, SPI_IOC_MESSAGE(1), &spi) < 0) {
+        fprintf(stderr, "ERROR: Ошибка приема SPI\n");
+    }
+
+    // Деактивируем устройство
+    digitalWrite(CS_PIN, HIGH);
+
+    // Выводим принятые данные
+    printf("Принято %d байт в режиме %d: [", len, current_spi_mode);
+    for (int i = 0; i < len; i++) {
+        printf("0x%02X%s", data[i], (i < len-1) ? ", " : "");
+    }
+    printf("]\n");
+}
  
  /**
   * Закрытие SPI
