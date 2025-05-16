@@ -86,8 +86,8 @@
      digitalWrite(CS_PIN, HIGH);  // Деактивируем CS
      //pinMode(10, OUTPUT);
      //pinMode
-     pinMode(GPIO_PIN, OUTPUT);
-     digitalWrite(GPIO_PIN, HIGH);
+    //  pinMode(GPIO_PIN, OUTPUT);
+    //  digitalWrite(GPIO_PIN, HIGH);
      printf("Настроен CS на GPIO%d\n", CS_PIN);
  
      // 4. Открываем устройство SPI
@@ -188,14 +188,14 @@ void set_spi_bit_order(uint8_t lsb_first) {
      // Деактивируем устройство
      
 
-     digitalWrite(GPIO_PIN, LOW);
-     usleep(10);
-     digitalWrite(GPIO_PIN, HIGH);
+    //  digitalWrite(GPIO_PIN, LOW);
+    //  usleep(10);
+    //  digitalWrite(GPIO_PIN, HIGH);
      //usleep(10);
  }
 
 
- void receive_spi_data(uint8_t *data, int len) {
+ void receive_spi_data(uintptr_t *data, int len) {
     if (spi_fd < 0) {
         fprintf(stderr, "SPI не инициализирован!\n");
         return;
@@ -205,7 +205,7 @@ void set_spi_bit_order(uint8_t lsb_first) {
     for (int i = 0; i < len; i++) dummy_tx[i] = 0xFF;
 
     struct spi_ioc_transfer spi = {
-        .tx_buf = (uintptr_t)dummy_tx,
+        .tx_buf = 0, //(uintptr_t)dummy_tx,
         .rx_buf = (uintptr_t)data,
         .len = len,
         .delay_usecs = 0,
@@ -213,10 +213,13 @@ void set_spi_bit_order(uint8_t lsb_first) {
         .bits_per_word = 8,
         .cs_change = 0         // CS управляется вручную
     };
+    digitalWrite(CS_PIN, LOW);
+     usleep(10);
 
     // Просто читаем
     if (ioctl(spi_fd, SPI_IOC_MESSAGE(1), &spi) < 0) {
         perror("Ошибка SPI чтения");
+        digitalWrite(CS_PIN, HIGH);
         return;
     }
     digitalWrite(CS_PIN, HIGH);
@@ -252,7 +255,7 @@ void set_spi_bit_order(uint8_t lsb_first) {
       
       // Тестовые данные
       uint8_t test_data[] = {0b00100000};
-      uint8_t receive_data[2] = {};
+      uintptr_t receive_data[2] = {};
       //100 0000000 00 0000000 00 
       printf("\n===== Тестовая передача =====\n");
       send_spi_data(test_data, sizeof(test_data));
@@ -266,19 +269,3 @@ void set_spi_bit_order(uint8_t lsb_first) {
       close_spi();
       return 0;
  }
-
-//  ===== Инициализация SPI =====
-// Настроен CS на GPIO17
-// Открыто SPI устройство: /dev/spidev0.0
-// Режим SPI: 0 (CPOL=0, CPHA=0)
-// Скорость SPI: 1000000 Hz (1.0 MHz)
-// Порядок бит установлен: MSB first
-
-// ===== Тестовая передача =====
-// Отправка 1 байт в режиме 0: [0x20]
-// cs pin 0
-// ===== Тестовая передача =====
-// === Прочитано 2 байт ===
-// Байт 0: 0x00 (DEC:   0, BIN: 00000000)
-// Байт 1: 0x00 (DEC:   0, BIN: 00000000)
-// cs pin 1SPI устройство закрыто
