@@ -338,17 +338,30 @@ void test_spi_loopback(uint8_t *test_data, int len) {
   */
 
 
-  int main() {
+ int main() {
     printf("\n===== Инициализация SPI =====\n");
-    init_spi(SPI_BUS, SPI_CHANNEL, 0, 1000000);
-    set_spi_bit_order(0); // MSB first
+    init_spi(SPI_BUS, SPI_CHANNEL, 0, SPI_SPEED);
+    set_spi_bit_order(0); // 0 - msb -1 - lsb
     
-    // Тестовые данные для loopback теста
-    uint8_t test_pattern[] = {0x55, 0xAA, 0x01, 0x80, 0xFF, 0x00};
+    // Тестовые данные
+    uint8_t test_data[] = {0b00100000};
+    uint8_t receive_data[2] = {0}; // Буфер для 2 байт
     
-    // Выполняем loopback тест
-    test_spi_loopback(test_pattern, sizeof(test_pattern));
+    printf("\n===== Тестовая передача =====\n");
+    send_spi_data(test_data, sizeof(test_data));
+
+    printf("cs pin %d", digitalRead(CS_PIN));
+    usleep(10);
     
+    printf("\n===== Тестовое чтение =====\n");
+    receive_spi_data(receive_data, sizeof(receive_data));
+    
+    printf("cs pin %d", digitalRead(CS_PIN));
     close_spi();
+
+    uint8_t loopback_test[] = {0x55, 0xAA};
+    send_spi_data(loopback_test, sizeof(loopback_test));
+    receive_spi_data(receive_data, sizeof(receive_data));
+
     return 0;
 }
