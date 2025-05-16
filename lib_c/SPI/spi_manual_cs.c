@@ -195,37 +195,40 @@ void set_spi_bit_order(uint8_t lsb_first) {
  }
 
 
-/**
- * Прием блока данных по SPI за один вызов
- * @param data - буфер для записи данных
- * @param len - количество байт для приема
- */
-void receive_spi_data(uint8_t *data, int len) {
+ void receive_spi_data(uint8_t *data, int len) {
     if (spi_fd < 0) {
         fprintf(stderr, "SPI не инициализирован!\n");
         return;
     }
 
-    printf("\n=== Начало блочного чтения ===\n");
-
-    // Создаем буфер передачи (заполняется dummy-байтами)
-    uint8_t *dummy_tx = malloc(len);
-    if (!dummy_tx) {
-        fprintf(stderr, "Ошибка выделения памяти для dummy_tx\n");
-        return;
-    }
-    memset(dummy_tx, 0xFF, len); // Запрос: посылаем 0xFF
+    uint8_t dummy_tx[len];
+    for (int i = 0; i < len; i++) dummy_tx[i] = 0xFF;
 
     struct spi_ioc_transfer spi = {
         .tx_buf = (uintptr_t)dummy_tx,
         .rx_buf = (uintptr_t)data,
         .len = len,
-        .delay_usecs = 10,
-        .speed_hz = 0,
+        .delay_usecs = 0,
+        .speed_hz = 0,         // Используем текущую
         .bits_per_word = 8,
-        .cs_change = 0
+        .cs_change = 0         // CS управляется вручную
     };
-//zz
+
+    // Просто читаем
+    if (ioctl(spi_fd, SPI_IOC_MESSAGE(1), &spi) < 0) {
+        perror("Ошибка SPI чтения");
+        return;
+    }
+
+    printf("=== Прочитано %d байт ===\n", len);
+    for (int i = 0; i < len; i++) {
+        printf("Байт %d: 0x%02X (DEC: %3d, BIN: ", i, data[i], data[i]);
+        for (int j = 7; j >= 0; j--)
+            printf("%d", (data[i] >> j) & 1);
+        printf(")\n");
+    }
+}
+
 
     int ret = ioctl(spi_fd, SPI_IOC_MESSAGE(1), &spi);
     if (ret < 0) {
