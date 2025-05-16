@@ -195,17 +195,17 @@ void set_spi_bit_order(uint8_t lsb_first) {
  }
 
 
- void receive_spi_data(uintptr_t *data, int len) {
+ void receive_spi_data(uint8_t *data, int len) {
     if (spi_fd < 0) {
         fprintf(stderr, "SPI не инициализирован!\n");
         return;
     }
 
-    uint8_t dummy_tx[len];
-    for (int i = 0; i < len; i++) dummy_tx[i] = 0xFF;
+    uint8_t tx_data[len];
+    memset(tx_data, 0xFF, len); // Заполняем FF для чтения
 
     struct spi_ioc_transfer spi = {
-        .tx_buf = 0, //(uintptr_t)dummy_tx,
+        .tx_buf = (uintptr_t)tx_data,
         .rx_buf = (uintptr_t)data,
         .len = len,
         .delay_usecs = 0,
@@ -213,16 +213,18 @@ void set_spi_bit_order(uint8_t lsb_first) {
         .bits_per_word = 8,
         .cs_change = 0         // CS управляется вручную
     };
-    digitalWrite(CS_PIN, LOW);
-     usleep(10);
 
-    // Просто читаем
+    digitalWrite(CS_PIN, LOW);
+    usleep(10);
+
     if (ioctl(spi_fd, SPI_IOC_MESSAGE(1), &spi) < 0) {
         perror("Ошибка SPI чтения");
         digitalWrite(CS_PIN, HIGH);
         return;
     }
+    
     digitalWrite(CS_PIN, HIGH);
+    
     printf("=== Прочитано %d байт ===\n", len);
     for (int i = 0; i < len; i++) {
         printf("Байт %d: 0x%02X (DEC: %3d, BIN: ", i, data[i], data[i]);
@@ -231,7 +233,6 @@ void set_spi_bit_order(uint8_t lsb_first) {
         printf(")\n");
     }
 }
-
 
 
  
