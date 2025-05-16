@@ -251,6 +251,78 @@ void set_spi_bit_order(uint8_t lsb_first) {
     free(rx_buf);
 }
  
+/**
+ * Функция для одновременной отправки и приёма данных (SPI loopback тест)
+ * @param tx_data - указатель на данные для отправки
+ * @param rx_data - буфер для принятых данных
+ * @param len - количество байт для передачи/приёма
+ * @return количество успешно переданных/принятых байт (-1 при ошибке)
+ */
+int spi_transfer(uint8_t *tx_data, uint8_t *rx_data, int len) {
+    if (spi_fd < 0) {
+        fprintf(stderr, "SPI не инициализирован!\n");
+        return -1;
+    }
+
+    struct spi_ioc_transfer spi = {
+        .tx_buf = (uintptr_t)tx_data,
+        .rx_buf = (uintptr_t)rx_data,
+        .len = len,
+        .delay_usecs = 10,
+        .speed_hz = 0, // Используем текущую скорость
+        .bits_per_word = 8,
+        .cs_change = 0 // Не изменять CS между передачами
+    };
+
+    digitalWrite(CS_PIN, LOW);
+    usleep(10);
+
+    int ret = ioctl(spi_fd, SPI_IOC_MESSAGE(1), &spi);
+    
+    digitalWrite(CS_PIN, HIGH);
+    
+    if (ret < 0) {
+        perror("Ошибка SPI передачи");
+        return -1;
+    }
+
+    return ret;
+}
+
+/**
+ * Функция для тестирования loopback (при замкнутых MOSI и MISO)
+ * @param test_data - данные для отправки
+ * @param len - длина данных
+ */
+void test_spi_loopback(uint8_t *test_data, int len) {
+    uint8_t rx_data[len];
+    memset(rx_data, 0, len);
+    
+    printf("\n=== Loopback тест (должны получить отправленные данные обратно) ===\n");
+    printf("Отправка: [");
+    for (int i = 0; i < len; i++) {
+        printf("0x%02X%s", test_data[i], (i < len-1) ? ", " : "");
+    }
+    printf("]\n");
+    
+    int ret = spi_transfer(test_data, rx_data, len);
+    
+    if (ret > 0) {
+        printf("Принято:  [");
+        for (int i = 0; i < len; i++) {
+            printf("0x%02X%s", rx_data[i], (i < len-1) ? ", " : "");
+        }
+        printf("]\n");
+        
+        // Проверка совпадения отправленных и принятых данных
+        if (memcmp(test_data, rx_data, len) == 0) {
+            printf("Тест пройден успешно!\n");
+        } else {
+            printf("Ошибка: принятые данные не совпадают с отправленными!\n");
+        }
+    }
+}
+
  /**
   * Закрытие SPI
   */
@@ -266,30 +338,17 @@ void set_spi_bit_order(uint8_t lsb_first) {
   */
 
 
- int main() {
+  int main() {
     printf("\n===== Инициализация SPI =====\n");
-    init_spi(SPI_BUS, SPI_CHANNEL, 0, SPI_SPEED);
-    set_spi_bit_order(0); // 0 - msb -1 - lsb
+    init_spi(SPI_BUS, SPI_CHANNEL, 0, 1000000);
+    set_spi_bit_order(0); // MSB first
     
-    // Тестовые данные
-    uint8_t test_data[] = {0b00100000};
-    uint8_t receive_data[2] = {0}; // Буфер для 2 байт
+    // Тестовые данные для loopback теста
+    uint8_t test_pattern[] = {0x55, 0xAA, 0x01, 0x80, 0xFF, 0x00};
     
-    printf("\n===== Тестовая передача =====\n");
-    send_spi_data(test_data, sizeof(test_data));
-
-    printf("cs pin %d", digitalRead(CS_PIN));
-    usleep(10);
+    // Выполняем loopback тест
+    test_spi_loopback(test_pattern, sizeof(test_pattern));
     
-    printf("\n===== Тестовое чтение =====\n");
-    receive_spi_data(receive_data, sizeof(receive_data));
-    
-    printf("cs pin %d", digitalRead(CS_PIN));
     close_spi();
-
-    uint8_t loopback_test[] = {0x55, 0xAA};
-    send_spi_data(loopback_test, sizeof(loopback_test));
-    receive_spi_data(receive_data, sizeof(receive_data));
-
     return 0;
 }
