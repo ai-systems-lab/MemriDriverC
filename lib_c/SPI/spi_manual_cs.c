@@ -201,39 +201,61 @@ void set_spi_bit_order(uint8_t lsb_first) {
  * @param data - указатель на буфер для приема данных
  * @param len  - количество байт для приема
  */
+/**
+ * Улучшенная функция приема данных с подробным логгированием
+ * @param data - буфер для приема данных
+ * @param len - количество байт для чтения
+ */
 void receive_spi_data(uint8_t *data, int len) {
-    // Инициализируем буфер для "мусорных" данных, которые будем отправлять
-    uint8_t dummy_data[len];
-    memset(dummy_data, 0xFF, len);  // Обычно отправляем 0xFF при чтении
+    if (spi_fd < 0) {
+        fprintf(stderr, "SPI не инициализирован!\n");
+        return;
+    }
 
+    // Подготовка dummy-данных для отправки
+    uint8_t dummy_tx[len];
+    memset(dummy_tx, 0xFF, len); // Стандартное значение для чтения
+    
     struct spi_ioc_transfer spi = {
-        .tx_buf = (unsigned long)dummy_data,  // Отправляем "мусор"
-        .rx_buf = (unsigned long)data,        // Принимаем полезные данные
+        .tx_buf = (unsigned long)dummy_tx,
+        .rx_buf = (unsigned long)data,
         .len = len,
-        .delay_usecs = 0,
-        .speed_hz = 0,          // Используем установленную скорость
+        .delay_usecs = 10,
+        .speed_hz = current_speed,
         .bits_per_word = 8,
-        .cs_change = 0          // Не изменять CS между передачами
+        .cs_change = 0
     };
 
-    // Активируем устройство
-    // digitalWrite(CS_PIN, LOW);
-    // usleep(10);  // Короткая пауза для стабилизации
-
-    // Принимаем данные
-    if (ioctl(spi_fd, SPI_IOC_MESSAGE(1), &spi) < 0) {
-        fprintf(stderr, "ERROR: Ошибка приема SPI\n");
-    }
-
-    // Деактивируем устройство
-    digitalWrite(CS_PIN, HIGH);
-
-    // Выводим принятые данные
-    printf("Принято %d байт в режиме %d: [", len, current_spi_mode);
-    for (int i = 0; i < len; i++) {
-        printf("0x%02X%s", data[i], (i < len-1) ? ", " : "");
-    }
+    printf("\n=== Начало чтения ===\n");
+    printf("Отправляем dummy: [");
+    for (int i = 0; i < len; i++) printf("0x%02X ", dummy_tx[i]);
     printf("]\n");
+
+    // Выполняем передачу
+    int ret = ioctl(spi_fd, SPI_IOC_MESSAGE(1), &spi);
+    
+    if (ret < 0) {
+        perror("Ошибка SPI транзакции");
+        printf("errno: %d (%s)\n", errno, strerror(errno));
+    } else {
+        printf("Успешно прочитано %d байт\n", ret);
+        
+        // Детальный вывод принятых данных
+        printf("RAW HEX: ");
+        for (int i = 0; i < len; i++) printf("%02X ", data[i]);
+        
+        printf("\nDEC: ");
+        for (int i = 0; i < len; i++) printf("%d ", data[i]);
+        
+        printf("\nBIN: ");
+        for (int i = 0; i < len; i++) {
+            for (int j = 7; j >= 0; j--)
+                printf("%d", (data[i] >> j) & 0x01);
+            printf(" ");
+        }
+        printf("\n");
+    }
+    printf("=== Конец чтения ===\n\n");
 }
  
  /**
