@@ -264,6 +264,8 @@ void set_spi_bit_order(uint8_t lsb_first) {
  /**
   * Главная функция
   */
+
+
  int main() {
     printf("\n===== Инициализация SPI =====\n");
     init_spi(SPI_BUS, SPI_CHANNEL, 0, SPI_SPEED);
@@ -284,5 +286,10 @@ void set_spi_bit_order(uint8_t lsb_first) {
     
     printf("cs pin %d", digitalRead(CS_PIN));
     close_spi();
+
+    uint8_t loopback_test[] = {0x55, 0xAA};
+    send_spi_data(loopback_test, sizeof(loopback_test));
+    receive_spi_data(receive_data, sizeof(receive_data));
+
     return 0;
 }
