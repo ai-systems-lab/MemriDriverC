@@ -201,17 +201,28 @@ void set_spi_bit_order(uint8_t lsb_first) {
         return;
     }
 
-    uint8_t tx_data[len];
-    memset(tx_data, 0xFF, len); // Заполняем FF для чтения
+    // Выделяем буферы с гарантированным выравниванием
+    uint8_t *tx_buf = malloc(len);
+    uint8_t *rx_buf = malloc(len);
+    
+    if (!tx_buf || !rx_buf) {
+        perror("Ошибка выделения памяти");
+        free(tx_buf);
+        free(rx_buf);
+        return;
+    }
+
+    memset(tx_buf, 0xFF, len); // Заполняем FF для чтения
+    memset(rx_buf, 0x00, len); // Очищаем буфер приёма
 
     struct spi_ioc_transfer spi = {
-        .tx_buf = (uintptr_t)tx_data,
-        .rx_buf = (uintptr_t)data,
+        .tx_buf = (unsigned long)tx_buf,
+        .rx_buf = (unsigned long)rx_buf,
         .len = len,
         .delay_usecs = 0,
-        .speed_hz = 0,         // Используем текущую
+        .speed_hz = 0,
         .bits_per_word = 8,
-        .cs_change = 0         // CS управляется вручную
+        .cs_change = 0
     };
 
     digitalWrite(CS_PIN, LOW);
@@ -219,19 +230,22 @@ void set_spi_bit_order(uint8_t lsb_first) {
 
     if (ioctl(spi_fd, SPI_IOC_MESSAGE(1), &spi) < 0) {
         perror("Ошибка SPI чтения");
-        digitalWrite(CS_PIN, HIGH);
-        return;
+    } else {
+        // Копируем результат в выходной буфер
+        memcpy(data, rx_buf, len);
+        
+        printf("=== Прочитано %d байт ===\n", len);
+        for (int i = 0; i < len; i++) {
+            printf("Байт %d: 0x%02X (DEC: %3d, BIN: ", i, data[i], data[i]);
+            for (int j = 7; j >= 0; j--)
+                printf("%d", (data[i] >> j) & 1);
+            printf(")\n");
+        }
     }
-    
+
     digitalWrite(CS_PIN, HIGH);
-    
-    printf("=== Прочитано %d байт ===\n", len);
-    for (int i = 0; i < len; i++) {
-        printf("Байт %d: 0x%02X (DEC: %3d, BIN: ", i, data[i], data[i]);
-        for (int j = 7; j >= 0; j--)
-            printf("%d", (data[i] >> j) & 1);
-        printf(")\n");
-    }
+    free(tx_buf);
+    free(rx_buf);
 }
 
 
