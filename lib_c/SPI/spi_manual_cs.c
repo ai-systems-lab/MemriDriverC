@@ -185,8 +185,13 @@
      }
  
      struct spi_ioc_transfer spi = {
+<<<<<<< HEAD
          .tx_buf = (unsigned long)tx_data,
          .rx_buf = (unsigned long)rx_data,
+=======
+         .tx_buf = (unsigned long)data,
+         .rx_buf = (unsigned long)data,
+>>>>>>> parent of 7527843 (fix sent data)
          .len = len,
          .delay_usecs = SPI_DELAY_US,
          .speed_hz = current_speed,
