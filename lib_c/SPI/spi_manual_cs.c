@@ -250,52 +250,24 @@ void set_spi_bit_order(uint8_t lsb_first) {
   * Главная функция
   */
  int main() {
-      printf("\n===== Инициализация SPI =====\n");
-      init_spi(SPI_BUS, SPI_CHANNEL, 0, SPI_SPEED);
-      set_spi_bit_order(0); // 0 - msb -1 - lsb
-      
-      // Тестовые данные
-      uint8_t test_data[] = {0b00100000};
-      uintptr_t receive_data[2] = {};
-      //100 0000000 00 0000000 00 
-      printf("\n===== Тестовая передача =====\n");
-      send_spi_data(test_data, sizeof(test_data));
+    printf("\n===== Инициализация SPI =====\n");
+    init_spi(SPI_BUS, SPI_CHANNEL, 0, SPI_SPEED);
+    set_spi_bit_order(0); // 0 - msb -1 - lsb
+    
+    // Тестовые данные
+    uint8_t test_data[] = {0b00100000};
+    uint8_t receive_data[2] = {0}; // Буфер для 2 байт
+    
+    printf("\n===== Тестовая передача =====\n");
+    send_spi_data(test_data, sizeof(test_data));
 
-      printf("cs pin %d", digitalRead(CS_PIN));
-      usleep(10);
-      printf("\n===== Тестовая передача =====\n");
-      receive_spi_data(receive_data, sizeof(receive_data));\
-      
-      printf("cs pin %d", digitalRead(CS_PIN));
-      close_spi();
-      return 0;
- }
-//  ===== Инициализация SPI =====
-//  Настроен CS на GPIO17
-//  Открыто SPI устройство: /dev/spidev0.0
-//  Режим SPI: 0 (CPOL=0, CPHA=0)
-//  Скорость SPI: 1000000 Hz (1.0 MHz)
-//  Порядок бит установлен: MSB first
- 
-//  ===== Тестовая передача =====
-//  Отправка 1 байт в режиме 0: [0x20]
-//  cs pin 0
-//  ===== Тестовая передача =====
-//  === Прочитано 16 байт ===
-//  Байт 0: 0x00 (DEC:   0, BIN: 00000000)
-//  Байт 1: 0x00 (DEC:   0, BIN: 00000000)
-//  Байт 2: 0x20 (DEC:  32, BIN: 00100000)
-//  Байт 3: 0xF5224A60 (DEC: -182302112, BIN: 01100000)
-//  Байт 4: 0xCB567818 (DEC: -883525608, BIN: 00011000)
-//  Байт 5: 0xCB766D10 (DEC: -881431280, BIN: 00010000)
-//  Байт 6: 0xF7B1480 (DEC: 259724416, BIN: 10000000)
-//  Байт 7: 0x00 (DEC:   0, BIN: 00000000)
-//  Байт 8: 0xF5224AC8 (DEC: -182302008, BIN: 11001000)
-//  Байт 9: 0xF5224AC8 (DEC: -182302008, BIN: 11001000)
-//  Байт 10: 0x01 (DEC:   1, BIN: 00000001)
-//  Байт 11: 0xF7CFDB8 (DEC: 259849656, BIN: 10111000)
-//  Байт 12: 0xF7B1480 (DEC: 259724416, BIN: 10000000)
-//  Байт 13: 0xF5224AD8 (DEC: -182301992, BIN: 11011000)
-//  Байт 14: 0xCB793BA0 (DEC: -881247328, BIN: 10100000)
-//  Байт 15: 0x00 (DEC:   0, BIN: 00000000)
-//  cs pin 1SPI устройство закрыто
+    printf("cs pin %d", digitalRead(CS_PIN));
+    usleep(10);
+    
+    printf("\n===== Тестовое чтение =====\n");
+    receive_spi_data(receive_data, sizeof(receive_data));
+    
+    printf("cs pin %d", digitalRead(CS_PIN));
+    close_spi();
+    return 0;
+}
