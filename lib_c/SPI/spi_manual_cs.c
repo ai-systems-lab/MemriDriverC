@@ -196,10 +196,19 @@ void set_spi_bit_order(uint8_t lsb_first) {
  * @param data - указатель на буфер для приема данных
  * @param len  - количество байт для приема
  */
+/**
+ * Корректный прием данных по SPI
+ * @param data - указатель на буфер для приема данных
+ * @param len  - количество байт для приема
+ */
 void receive_spi_data(uint8_t *data, int len) {
+    // Инициализируем буфер для "мусорных" данных, которые будем отправлять
+    uint8_t dummy_data[len];
+    memset(dummy_data, 0xFF, len);  // Обычно отправляем 0xFF при чтении
+
     struct spi_ioc_transfer spi = {
-        .tx_buf = 0,            // Не отправляем данные
-        .rx_buf = (unsigned long)data,
+        .tx_buf = (unsigned long)dummy_data,  // Отправляем "мусор"
+        .rx_buf = (unsigned long)data,        // Принимаем полезные данные
         .len = len,
         .delay_usecs = 0,
         .speed_hz = 0,          // Используем установленную скорость
@@ -207,6 +216,9 @@ void receive_spi_data(uint8_t *data, int len) {
         .cs_change = 0          // Не изменять CS между передачами
     };
 
+    // Активируем устройство
+    // digitalWrite(CS_PIN, LOW);
+    // usleep(10);  // Короткая пауза для стабилизации
 
     // Принимаем данные
     if (ioctl(spi_fd, SPI_IOC_MESSAGE(1), &spi) < 0) {
@@ -249,22 +261,7 @@ void receive_spi_data(uint8_t *data, int len) {
       send_spi_data(test_data, sizeof(test_data));
 
       printf("\n===== Тестовая передача =====\n");
-      receive_spi_data(receive_data, sizeof(receive_data));
- 
-    //   printf("\n===== Смена режима на 2 =====\n");
-    //   set_spi_mode(2);  // Меняем режим без переинициализации
-      
-    //   printf("\n===== Тестовая передача в новом режиме =====\n");
-    //   send_spi_data(test_data2, sizeof(test_data2));
- 
-    //   printf("\n===== Возврат в режим 0 =====\n");
-    //   set_spi_mode(0);
-      
-    //   printf("\n===== Тестовая передача =====\n");
-    //   send_spi_data(test_data, sizeof(test_data));
- 
-    //   printf("\n===== Завершение работы =====\n");
-    //   close_spi();
+      receive_spi_data(receive_data, sizeof(receive_data));\
  
       return 0;
  }
