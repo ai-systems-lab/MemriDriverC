@@ -221,7 +221,7 @@ void receive_spi_data(uint8_t *data, int len) {
             .delay_usecs = 10,
             .speed_hz = 0,
             .bits_per_word = 8,
-            .cs_change = 0  // CS остается активным
+            .cs_change = 0  
         };
 
         // Выполняем передачу для одного байта
@@ -269,6 +269,11 @@ void receive_spi_data(uint8_t *data, int len) {
       printf("\n===== Инициализация SPI =====\n");
       init_spi(SPI_BUS, SPI_CHANNEL, 0, SPI_SPEED);
       set_spi_bit_order(0); // 0 - msb -1 - lsb
+
+      printf("pins\n");
+      printf("CS pin %d" ,CS_PIN, digitalRead(CS_PIN) ? "high" : " low", '\n');
+      printf("GPIO pin %d", GPIO_PIN, digitalRead(GPIO_PIN) ? "high" : " low", '\n');
+
       // Тестовые данные
       uint8_t test_data[] = {0b00100000};
       uint8_t receive_data[2] = {};
@@ -276,9 +281,19 @@ void receive_spi_data(uint8_t *data, int len) {
       printf("\n===== Тестовая передача =====\n");
       send_spi_data(test_data, sizeof(test_data));
 
+      printf("pins\n");
+      printf("CS pin %d" ,CS_PIN, digitalRead(CS_PIN) ? "high" : " low", '\n');
+      printf("GPIO pin %d", GPIO_PIN, digitalRead(GPIO_PIN) ? "high" : " low", '\n');
+
+      usleep(10);
+      set_spi_mode(1);
       printf("\n===== Тестовая передача =====\n");
       receive_spi_data(receive_data, sizeof(receive_data));\
- 
+
+      printf("pins\n");
+      printf("CS pin %d" ,CS_PIN, digitalRead(CS_PIN) ? "high" : " low", '\n');
+      printf("GPIO pin %d", GPIO_PIN, digitalRead(GPIO_PIN) ? "high" : " low", '\n');
+      close_spi();
       return 0;
  }
 //  ===== Инициализация SPI =====
