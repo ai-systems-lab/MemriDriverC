@@ -12,6 +12,7 @@
  #include <stdint.h>
  #include <unistd.h>
  #include <string.h>
+ #include <errno.h>
  
  // ========== КОНФИГУРАЦИЯ ==========
  #define SPI_BUS         0       // 0 (SPI0) или 1 (SPI1)
@@ -213,23 +214,23 @@ void receive_spi_data(uint8_t *data, int len) {
     }
 
     // Подготовка dummy-данных для отправки
-    uint8_t dummy_tx[len];
-    memset(dummy_tx, 0xFF, len); // Стандартное значение для чтения
+    // uint8_t dummy_tx[len];
+    // memset(dummy_tx, 0xFF, len); // Стандартное значение для чтения
     
     struct spi_ioc_transfer spi = {
-        .tx_buf = (unsigned long)dummy_tx,
+        .tx_buf = 0, //(unsigned long)dummy_tx
         .rx_buf = (unsigned long)data,
         .len = len,
         .delay_usecs = 10,
-        .speed_hz = current_speed,
+        .speed_hz = 0,
         .bits_per_word = 8,
         .cs_change = 0
     };
 
     printf("\n=== Начало чтения ===\n");
-    printf("Отправляем dummy: [");
-    for (int i = 0; i < len; i++) printf("0x%02X ", dummy_tx[i]);
-    printf("]\n");
+    // printf("Отправляем dummy: [");
+    // for (int i = 0; i < len; i++) printf("0x%02X ", dummy_tx[i]);
+    // printf("]\n");
 
     // Выполняем передачу
     int ret = ioctl(spi_fd, SPI_IOC_MESSAGE(1), &spi);
@@ -256,6 +257,7 @@ void receive_spi_data(uint8_t *data, int len) {
         printf("\n");
     }
     printf("=== Конец чтения ===\n\n");
+    digitalWrite(CS_PIN, HIGH);
 }
  
  /**
@@ -273,7 +275,7 @@ void receive_spi_data(uint8_t *data, int len) {
   */
  int main() {
       printf("\n===== Инициализация SPI =====\n");
-      init_spi(SPI_BUS, SPI_CHANNEL, SPI_MODE, SPI_SPEED);
+      init_spi(SPI_BUS, SPI_CHANNEL, 0, SPI_SPEED);
       set_spi_bit_order(0); // 0 - msb -1 - lsb
       // Тестовые данные
       uint8_t test_data[] = {0b00100000};
