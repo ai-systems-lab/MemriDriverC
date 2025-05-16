@@ -195,59 +195,45 @@ void set_spi_bit_order(uint8_t lsb_first) {
  }
 
 
- void receive_spi_data(uint8_t *data, int len) {
+ void receive_spi_data(char *data, int len) {
     if (spi_fd < 0) {
         fprintf(stderr, "SPI не инициализирован!\n");
         return;
     }
 
-    // Выделяем буферы с гарантированным выравниванием
-    uint8_t *tx_buf = malloc(len);
-    uint8_t *rx_buf = malloc(len);
-    
-    if (!tx_buf || !rx_buf) {
-        perror("Ошибка выделения памяти");
-        free(tx_buf);
-        free(rx_buf);
-        return;
-    }
+    // Буфер для передачи (в SPI чтение требует передачи)
+    char tx_buf[len];
+    memset(tx_buf, 0xFF, len); // Заполняем "мусором" для чтения
 
-    memset(tx_buf, 0xFF, len); // Заполняем FF для чтения
-    memset(rx_buf, 0x00, len); // Очищаем буфер приёма
-
-    struct spi_ioc_transfer spi = {
+    struct spi_ioc_transfer tr = {
         .tx_buf = (unsigned long)tx_buf,
-        .rx_buf = (unsigned long)rx_buf,
+        .rx_buf = (unsigned long)data,
         .len = len,
         .delay_usecs = 0,
-        .speed_hz = 0,
+        .speed_hz = 0, // Используем текущую скорость
         .bits_per_word = 8,
-        .cs_change = 0
     };
 
-    digitalWrite(CS_PIN, LOW);
-    usleep(10);
+    //digitalWrite(CS_PIN, LOW);
+    usleep(10); // Короткая пауза
 
-    if (ioctl(spi_fd, SPI_IOC_MESSAGE(1), &spi) < 0) {
+    int ret = ioctl(spi_fd, SPI_IOC_MESSAGE(1), &tr);
+    if (ret < 1) {
         perror("Ошибка SPI чтения");
-    } else {
-        // Копируем результат в выходной буфер
-        memcpy(data, rx_buf, len);
-        
-        printf("=== Прочитано %d байт ===\n", len);
-        for (int i = 0; i < len; i++) {
-            printf("Байт %d: 0x%02X (DEC: %3d, BIN: ", i, data[i], data[i]);
-            for (int j = 7; j >= 0; j--)
-                printf("%d", (data[i] >> j) & 1);
-            printf(")\n");
-        }
+        printf("Возвращено: %d, errno: %d (%s)\n", ret, errno, strerror(errno));
     }
 
     digitalWrite(CS_PIN, HIGH);
-    free(tx_buf);
-    free(rx_buf);
-}
 
+    // Вывод в HEX и BIN формате
+    printf("=== Прочитано %d байт ===\n", len);
+    for (int i = 0; i < len; i++) {
+        printf("Байт %d: 0x%02X (DEC: %3d, BIN: ", i, (unsigned char)data[i], (unsigned char)data[i]);
+        for (int j = 7; j >= 0; j--)
+            printf("%d", ((unsigned char)data[i] >> j) & 1);
+        printf(")\n");
+    }
+}
 
  
  /**
@@ -266,22 +252,17 @@ void set_spi_bit_order(uint8_t lsb_first) {
  int main() {
     printf("\n===== Инициализация SPI =====\n");
     init_spi(SPI_BUS, SPI_CHANNEL, 0, SPI_SPEED);
-    set_spi_bit_order(0); // 0 - msb -1 - lsb
-    
-    // Тестовые данные
-    uint8_t test_data[] = {0b00100000};
-    uint8_t receive_data[2] = {0}; // Буфер для 2 байт
-    
-    printf("\n===== Тестовая передача =====\n");
-    send_spi_data(test_data, sizeof(test_data));
+    set_spi_bit_order(0); // MSB first
 
-    printf("cs pin %d", digitalRead(CS_PIN));
-    usleep(10);
-    
+    char test_data[] = {0x20}; // Тестовые данные для отправки
+    char receive_buf[2] = {0}; // Буфер для чтения 2 байт
+
+    printf("\n===== Тестовая передача =====\n");
+    send_spi_data((uint8_t*)test_data, sizeof(test_data));
+
     printf("\n===== Тестовое чтение =====\n");
-    receive_spi_data(receive_data, sizeof(receive_data));
-    
-    printf("cs pin %d", digitalRead(CS_PIN));
+    receive_spi_data(receive_buf, sizeof(receive_buf));
+
     close_spi();
     return 0;
 }
