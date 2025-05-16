@@ -201,7 +201,6 @@ void set_spi_bit_order(uint8_t lsb_first) {
         return;
     }
 
-    // Выделяем буферы с гарантированным выравниванием
     uint8_t *tx_buf = malloc(len);
     uint8_t *rx_buf = malloc(len);
     
@@ -212,8 +211,8 @@ void set_spi_bit_order(uint8_t lsb_first) {
         return;
     }
 
-    memset(tx_buf, 0xFF, len); // Заполняем FF для чтения
-    memset(rx_buf, 0x00, len); // Очищаем буфер приёма
+    memset(tx_buf, 0xFF, len);
+    memset(rx_buf, 0x00, len);
 
     struct spi_ioc_transfer spi = {
         .tx_buf = (uintptr_t)tx_buf,
@@ -228,10 +227,14 @@ void set_spi_bit_order(uint8_t lsb_first) {
     digitalWrite(CS_PIN, LOW);
     usleep(10);
 
-    if (ioctl(spi_fd, SPI_IOC_MESSAGE(1), &spi) < 0) {
+    int ret = ioctl(spi_fd, SPI_IOC_MESSAGE(1), &spi);
+    if (ret < 0) {
         perror("Ошибка SPI чтения");
+        fprintf(stderr, "ioctl вернул %d, errno: %d (%s)\n", 
+                ret, errno, strerror(errno));
+    } else if (ret != len) {
+        fprintf(stderr, "Прочитано %d байт из %d ожидаемых\n", ret, len);
     } else {
-        // Копируем результат в выходной буфер
         memcpy(data, rx_buf, len);
         
         printf("=== Прочитано %d байт ===\n", len);
@@ -247,8 +250,6 @@ void set_spi_bit_order(uint8_t lsb_first) {
     free(tx_buf);
     free(rx_buf);
 }
-
-
  
  /**
   * Закрытие SPI
