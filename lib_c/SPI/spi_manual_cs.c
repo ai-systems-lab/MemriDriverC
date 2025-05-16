@@ -195,16 +195,9 @@ void set_spi_bit_order(uint8_t lsb_first) {
 
 
 /**
- * Альтернативная реализация приема данных по SPI
- * с пошаговым чтением и улучшенным управлением CS
- * @param data - буфер для приема данных
- * @param len - количество байт для чтения
- */
-/**
- * Альтернативная реализация приема данных по SPI
- * с пошаговым чтением и улучшенным управлением CS
- * @param data - буфер для приема данных
- * @param len - количество байт для чтения
+ * Прием блока данных по SPI за один вызов
+ * @param data - буфер для записи данных
+ * @param len - количество байт для приема
  */
 void receive_spi_data(uint8_t *data, int len) {
     if (spi_fd < 0) {
@@ -212,49 +205,51 @@ void receive_spi_data(uint8_t *data, int len) {
         return;
     }
 
-    printf("\n=== Начало чтения ===\n");
+    printf("\n=== Начало блочного чтения ===\n");
 
-    // Активируем устройство
-    digitalWrite(CS_PIN, LOW);
-    usleep(10);
+    // Создаем буфер передачи (заполняется dummy-байтами)
+    uint8_t *dummy_tx = malloc(len);
+    if (!dummy_tx) {
+        fprintf(stderr, "Ошибка выделения памяти для dummy_tx\n");
+        return;
+    }
+    memset(dummy_tx, 0xFF, len); // Запрос: посылаем 0xFF
 
-    for (int i = 0; i < len; i++) {
-        uint8_t dummy_tx = 0xFF;
-        uint8_t rx_byte = 0;
+    struct spi_ioc_transfer spi = {
+        .tx_buf = (uintptr_t)dummy_tx,
+        .rx_buf = (uintptr_t)data,
+        .len = len,
+        .delay_usecs = 10,
+        .speed_hz = 0,
+        .bits_per_word = 8,
+        .cs_change = 0
+    };
+//zz
 
-        struct spi_ioc_transfer spi = {
-            .tx_buf = (uintptr_t)&dummy_tx,
-            .rx_buf = (uintptr_t)&rx_byte,
-            .len = 1,
-            .delay_usecs = 10,
-            .speed_hz = 0,
-            .bits_per_word = 8,
-            .cs_change = 0
-        };
-
-        int ret = ioctl(spi_fd, SPI_IOC_MESSAGE(1), &spi);
-        if (ret < 0) {
-            perror("Ошибка чтения байта");
-            fprintf(stderr, "Ошибка при чтении байта %d\n", i);
-            data[i] = 0xFF;
-        } else {
-            data[i] = rx_byte;
-            printf("Байт %d: 0x%02X (DEC: %3d, BIN: ", i, rx_byte, rx_byte);
-            for (int j = 7; j >= 0; j--) {
-                printf("%d", (rx_byte >> j) & 0x01);
-            }
-            printf(")\n");
-        }
-
-        usleep(10);
+    int ret = ioctl(spi_fd, SPI_IOC_MESSAGE(1), &spi);
+    if (ret < 0) {
+        perror("Ошибка SPI при передаче");
+        free(dummy_tx);
+        digitalWrite(CS_PIN, HIGH);
+        return;
     }
 
-    // Деактивируем устройство
+    // Деактивируем CS
     digitalWrite(CS_PIN, HIGH);
     usleep(10);
 
-    printf("=== Прочитано %d байт ===\n\n", len);
+    // Выводим принятые данные
+    for (int i = 0; i < len; i++) {
+        printf("Байт %d: 0x%02X (DEC: %3d, BIN: ", i, data[i], data[i]);
+        for (int j = 7; j >= 0; j--)
+            printf("%d", (data[i] >> j) & 1);
+        printf(")\n");
+    }
+
+    printf("=== Завершено. Прочитано %d байт ===\n\n", len);
+    free(dummy_tx);
 }
+
 
  
  /**
