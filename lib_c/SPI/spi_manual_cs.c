@@ -230,30 +230,6 @@ void set_spi_bit_order(uint8_t lsb_first) {
 }
 
 
-    int ret = ioctl(spi_fd, SPI_IOC_MESSAGE(1), &spi);
-    if (ret < 0) {
-        perror("Ошибка SPI при передаче");
-        free(dummy_tx);
-        digitalWrite(CS_PIN, HIGH);
-        return;
-    }
-
-    // Деактивируем CS
-    digitalWrite(CS_PIN, HIGH);
-    usleep(10);
-
-    // Выводим принятые данные
-    for (int i = 0; i < len; i++) {
-        printf("Байт %d: 0x%02X (DEC: %3d, BIN: ", i, data[i], data[i]);
-        for (int j = 7; j >= 0; j--)
-            printf("%d", (data[i] >> j) & 1);
-        printf(")\n");
-    }
-
-    printf("=== Завершено. Прочитано %d байт ===\n\n", len);
-    free(dummy_tx);
-}
-
 
  
  /**
