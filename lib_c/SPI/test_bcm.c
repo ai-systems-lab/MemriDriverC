@@ -1,26 +1,50 @@
-#include <bcm2835.h>
 #include <stdio.h>
+#include <fcntl.h>
+#include <unistd.h>
+#include <sys/ioctl.h>
+#include <linux/spi/spidev.h>
 
 int main() {
-    if (!bcm2835_init()) {
-        printf("Ошибка инициализации BCM2835!\n");
+    int fd;
+    uint8_t tx_data[] = {0x55, 0xAA};
+    uint8_t rx_data[2] = {0};
+
+    // Открываем устройство SPI
+    fd = open("/dev/spidev0.0", O_RDWR);
+    if (fd < 0) {
+        perror("Ошибка открытия SPI устройства");
         return 1;
     }
 
-    bcm2835_spi_begin();
-    bcm2835_spi_setBitOrder(BCM2835_SPI_BIT_ORDER_MSBFIRST);
-    bcm2835_spi_setDataMode(BCM2835_SPI_MODE0);
-    bcm2835_spi_setClockDivider(BCM2835_SPI_CLOCK_DIVIDER_256); // ~1 МГц
+    // Настраиваем режим SPI (Mode 0)
+    uint8_t mode = SPI_MODE_0;
+    ioctl(fd, SPI_IOC_WR_MODE, &mode);
 
-    uint8_t tx_data[] = {0x55, 0xAA};
-    uint8_t rx_data[2] = {0};
-    
-    bcm2835_spi_transfernb((char*)tx_data, (char*)rx_data, sizeof(tx_data));
-    
+    // Настраиваем скорость (1 МГц)
+    uint32_t speed = 1000000;
+    ioctl(fd, SPI_IOC_WR_MAX_SPEED_HZ, &speed);
+
+    // Структура для передачи данных
+    struct spi_ioc_transfer tr = {
+        .tx_buf = (unsigned long)tx_data,
+        .rx_buf = (unsigned long)rx_data,
+        .len = sizeof(tx_data),
+        .delay_usecs = 0,
+        .speed_hz = speed,
+        .bits_per_word = 8,
+    };
+
+    // Отправляем данные
+    if (ioctl(fd, SPI_IOC_MESSAGE(1), &tr) < 0) {
+        perror("Ошибка передачи SPI");
+        close(fd);
+        return 1;
+    }
+
     printf("Отправлено: 0x%02X 0x%02X\n", tx_data[0], tx_data[1]);
     printf("Принято:    0x%02X 0x%02X\n", rx_data[0], rx_data[1]);
 
-    bcm2835_spi_end();
-    bcm2835_close();
+    close(fd);
     return 0;
-}//gcc -o spi_test spi_test.c -lbcm2835
+}// gcc spi_test.c -o spi_test
+//sudo ./spi_test

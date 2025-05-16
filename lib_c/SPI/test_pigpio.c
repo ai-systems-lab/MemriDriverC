@@ -96,4 +96,4 @@ int main() {
     
     return 0;
 }
-// 
+// gcc -o spi_test spi_test.c -lpigpio -lrt -lpthread
