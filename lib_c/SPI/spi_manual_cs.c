@@ -200,57 +200,62 @@ void set_spi_bit_order(uint8_t lsb_first) {
  * @param data - буфер для приема данных
  * @param len - количество байт для чтения
  */
+/**
+ * Альтернативная реализация приема данных по SPI
+ * с пошаговым чтением и улучшенным управлением CS
+ * @param data - буфер для приема данных
+ * @param len - количество байт для чтения
+ */
 void receive_spi_data(uint8_t *data, int len) {
     if (spi_fd < 0) {
         fprintf(stderr, "SPI не инициализирован!\n");
         return;
     }
 
-    
-    
     printf("\n=== Начало чтения ===\n");
-    
+
+    // Активируем устройство
+    digitalWrite(CS_PIN, LOW);
+    usleep(10);
+
     for (int i = 0; i < len; i++) {
-        uint8_t dummy_tx = 0xFF;  // Байт для отправки при чтении
+        uint8_t dummy_tx = 0xFF;
         uint8_t rx_byte = 0;
-        
+
         struct spi_ioc_transfer spi = {
-            .tx_buf = (unsigned long)&dummy_tx,
-            .rx_buf = (unsigned long)&rx_byte,
+            .tx_buf = (uintptr_t)&dummy_tx,
+            .rx_buf = (uintptr_t)&rx_byte,
             .len = 1,
             .delay_usecs = 10,
             .speed_hz = 0,
             .bits_per_word = 8,
-            .cs_change = 0  
+            .cs_change = 0
         };
 
-        // Выполняем передачу для одного байта
         int ret = ioctl(spi_fd, SPI_IOC_MESSAGE(1), &spi);
-        
         if (ret < 0) {
             perror("Ошибка чтения байта");
-            printf("Ошибка при чтении байта %d\n", i);
-            data[i] = 0xFF;  // Заполняем мусором при ошибке
+            fprintf(stderr, "Ошибка при чтении байта %d\n", i);
+            data[i] = 0xFF;
         } else {
             data[i] = rx_byte;
             printf("Байт %d: 0x%02X (DEC: %3d, BIN: ", i, rx_byte, rx_byte);
-            
-            // Вывод в бинарном виде
             for (int j = 7; j >= 0; j--) {
                 printf("%d", (rx_byte >> j) & 0x01);
             }
             printf(")\n");
         }
-        
-        usleep(10);  // Пауза между байтами
+
+        usleep(10);
     }
-    
+
     // Деактивируем устройство
     digitalWrite(CS_PIN, HIGH);
-    usleep(10);  // Пауза после деактивации
-    
+    usleep(10);
+
     printf("=== Прочитано %d байт ===\n\n", len);
 }
+
  
  /**
   * Закрытие SPI
