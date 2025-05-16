@@ -1,7 +1,6 @@
 /**
- * Полная реализация SPI для Raspberry Pi
- * С поддержкой всех 4 режимов и выбора канала через SPI_CHANNEL
- * Добавлена функция смены режима SPI без переинициализации
+ * Улучшенная реализация SPI для Raspberry Pi
+ * С поддержкой полнодуплексной передачи, улучшенным логированием и обработкой ошибок
  */
 
  #include <wiringPi.h>
@@ -12,53 +11,79 @@
  #include <stdint.h>
  #include <unistd.h>
  #include <string.h>
+ #include <errno.h>
  
  // ========== КОНФИГУРАЦИЯ ==========
  #define SPI_BUS         0       // 0 (SPI0) или 1 (SPI1)
  #define SPI_CHANNEL     0       // 0 или 1 (канал SPI)
  #define CS_PIN         17       // GPIO для Chip Select
- #define GPIO_PIN       22       // ldac 
+ #define GPIO_PIN       22       // LDAC 
  #define SPI_SPEED   1000000     // Скорость по умолчанию (1 МГц)
  #define SPI_MODE        0       // Режим SPI по умолчанию (0-3)
+ #define SPI_DELAY_US    10      // Задержка между операциями (мкс)
  
  // ========== ГЛОБАЛЬНЫЕ ПЕРЕМЕННЫЕ ==========
- int spi_fd;  // Файловый дескриптор SPI
- int current_spi_mode; // Текущий режим SPI
- uint8_t current_bit_order;
+ int spi_fd = -1;                // Файловый дескриптор SPI
+ int current_spi_mode;           // Текущий режим SPI
+ uint8_t current_bit_order;      // Текущий порядок бит
+ uint32_t current_speed;         // Текущая скорость SPI
  
  /**
-  * Функция изменения режима SPI без переинициализации
-  * @param mode - новый режим SPI (0-3)
+  * Вывод отладочной информации о SPI
   */
- void set_spi_mode(uint8_t mode) {
+ void print_spi_debug_info() {
      if (spi_fd < 0) {
-         fprintf(stderr, "SPI не инициализирован!\n");
+         printf("SPI не инициализирован\n");
          return;
      }
+     
+     printf("\n--- Текущие настройки SPI ---\n");
+     printf("Файловый дескриптор: %d\n", spi_fd);
+     printf("Режим: %d (CPOL=%d, CPHA=%d)\n", 
+            current_spi_mode, (current_spi_mode >> 1) & 0x01, current_spi_mode & 0x01);
+     printf("Порядок бит: %s\n", current_bit_order ? "LSB first" : "MSB first");
+     printf("Скорость: %d Hz (%.1f MHz)\n", current_speed, current_speed/1000000.0);
+     
+     uint8_t bits;
+     if (ioctl(spi_fd, SPI_IOC_RD_BITS_PER_WORD, &bits) == 0) {
+         printf("Бит на слово: %d\n", bits);
+     }
+ }
  
-     // Убедимся, что CS неактивен перед сменой режима
+ /**
+  * Установка режима SPI
+  * @param mode - новый режим SPI (0-3)
+  * @return 0 при успехе, -1 при ошибке
+  */
+ int set_spi_mode(uint8_t mode) {
+     if (spi_fd < 0) {
+         fprintf(stderr, "SPI не инициализирован!\n");
+         return -1;
+     }
+ 
      digitalWrite(CS_PIN, HIGH);
-     usleep(10); // Короткая пауза
+     usleep(SPI_DELAY_US);
  
      if (ioctl(spi_fd, SPI_IOC_WR_MODE, &mode) < 0) {
          perror("Ошибка смены режима SPI");
-         return;
+         return -1;
      }
  
-     // Проверяем, что режим установился
      uint8_t read_mode;
      if (ioctl(spi_fd, SPI_IOC_RD_MODE, &read_mode) < 0) {
          perror("Ошибка чтения режима SPI");
-         return;
+         return -1;
      }
  
      if (read_mode != mode) {
          fprintf(stderr, "Режим не изменился! Текущий: %d\n", read_mode);
-     } else {
-         current_spi_mode = mode;
-         printf("Режим SPI изменен на %d (CPOL=%d, CPHA=%d)\n",
-                mode, (mode >> 1) & 0x01, mode & 0x01);
+         return -1;
      }
+ 
+     current_spi_mode = mode;
+     printf("Режим SPI изменен на %d (CPOL=%d, CPHA=%d)\n",
+            mode, (mode >> 1) & 0x01, mode & 0x01);
+     return 0;
  }
  
  /**
@@ -67,164 +92,136 @@
   * @param channel - номер канала (0 или 1)
   * @param mode    - режим SPI (0-3)
   * @param speed   - скорость в Гц
+  * @return 0 при успехе, -1 при ошибке
   */
- void init_spi(int bus, int channel, int mode, int speed) {
-     // 1. Формируем путь к устройству SPI
+ int init_spi(int bus, int channel, int mode, int speed) {
      char spi_device[20];
      snprintf(spi_device, sizeof(spi_device), "/dev/spidev%d.%d", bus, channel);
  
-     // 2. Инициализация GPIO
      if (wiringPiSetupGpio() == -1) {
          fprintf(stderr, "ERROR: Не удалось инициализировать wiringPi\n");
-         return;
+         return -1;
      }
  
-     // 3. Настройка CS-пина
      pinMode(CS_PIN, OUTPUT);
-     digitalWrite(CS_PIN, HIGH);  // Деактивируем CS
-     //pinMode(10, OUTPUT);
-     //pinMode
+     digitalWrite(CS_PIN, HIGH);
      pinMode(GPIO_PIN, OUTPUT);
      digitalWrite(GPIO_PIN, HIGH);
-     printf("Настроен CS на GPIO%d\n", CS_PIN);
  
-     // 4. Открываем устройство SPI
      spi_fd = open(spi_device, O_RDWR);
      if (spi_fd < 0) {
-         fprintf(stderr, "ERROR: Не удалось открыть %s\n", spi_device);
-         return;
+         fprintf(stderr, "ERROR: Не удалось открыть %s: %s\n", spi_device, strerror(errno));
+         return -1;
      }
-     printf("Открыто SPI устройство: %s\n", spi_device);
  
-     // 5. Устанавливаем режим SPI
-     if (ioctl(spi_fd, SPI_IOC_WR_MODE, &mode) < 0) {
-         fprintf(stderr, "ERROR: Не удалось установить режим SPI\n");
-         return;
+     if (set_spi_mode(mode) {
+         close(spi_fd);
+         spi_fd = -1;
+         return -1;
      }
-     current_spi_mode = mode;
-     printf("Режим SPI: %d (CPOL=%d, CPHA=%d)\n", 
-            mode, (mode >> 1) & 0x01, mode & 0x01);
  
-     // 6. Устанавливаем скорость
      if (ioctl(spi_fd, SPI_IOC_WR_MAX_SPEED_HZ, &speed) < 0) {
          fprintf(stderr, "ERROR: Не удалось установить скорость SPI\n");
-         return;
+         close(spi_fd);
+         spi_fd = -1;
+         return -1;
      }
-     printf("Скорость SPI: %d Hz (%.1f MHz)\n", speed, speed/1000000.0);
+     current_speed = speed;
  
-     // 7. Дополнительные настройки
-     uint8_t bits = 8;  // 8 бит на слово
+     uint8_t bits = 8;
      if (ioctl(spi_fd, SPI_IOC_WR_BITS_PER_WORD, &bits) < 0) {
          fprintf(stderr, "WARNING: Не удалось установить размер слова\n");
      }
+ 
+     print_spi_debug_info();
+     return 0;
  }
-
- /**
- * Устанавливает порядок бит (LSB first / MSB first)
- * @param lsb_first - 1 для LSB first, 0 для MSB first
- */
-void set_spi_bit_order(uint8_t lsb_first) {
-    if (spi_fd < 0) {
-        fprintf(stderr, "SPI не инициализирован!\n");
-        return;
-    }
-
-    if (ioctl(spi_fd, SPI_IOC_WR_LSB_FIRST, &lsb_first) < 0) {
-        perror("Ошибка установки порядка бит");
-        return;
-    }
-
-    // Проверка
-    uint8_t check;
-    if (ioctl(spi_fd, SPI_IOC_RD_LSB_FIRST, &check) < 0) {
-        perror("Ошибка чтения порядка бит");
-        return;
-    }
-
-    if (check != lsb_first) {
-        fprintf(stderr, "Порядок бит не изменился! Текущий: %s\n",
-                check ? "LSB first" : "MSB first");
-    } else {
-        current_bit_order = check;
-        printf("Порядок бит установлен: %s\n",
-               check ? "LSB first" : "MSB first");
-    }
-}
  
  /**
-  * Отправка данных по SPI
-  * @param data - указатель на данные
-  * @param len  - количество байт
+  * Установка порядка бит
+  * @param lsb_first - 1 для LSB first, 0 для MSB first
+  * @return 0 при успехе, -1 при ошибке
   */
- void send_spi_data(uint8_t *data, int len) {
+ int set_spi_bit_order(uint8_t lsb_first) {
+     if (spi_fd < 0) {
+         fprintf(stderr, "SPI не инициализирован!\n");
+         return -1;
+     }
+ 
+     if (ioctl(spi_fd, SPI_IOC_WR_LSB_FIRST, &lsb_first) < 0) {
+         perror("Ошибка установки порядка бит");
+         return -1;
+     }
+ 
+     uint8_t check;
+     if (ioctl(spi_fd, SPI_IOC_RD_LSB_FIRST, &check) < 0) {
+         perror("Ошибка чтения порядка бит");
+         return -1;
+     }
+ 
+     if (check != lsb_first) {
+         fprintf(stderr, "Порядок бит не изменился! Текущий: %s\n",
+                 check ? "LSB first" : "MSB first");
+         return -1;
+     }
+ 
+     current_bit_order = check;
+     printf("Порядок бит установлен: %s\n",
+            check ? "LSB first" : "MSB first");
+     return 0;
+ }
+ 
+ /**
+  * Полнодуплексная передача данных по SPI
+  * @param tx_data - данные для отправки
+  * @param rx_data - буфер для приема
+  * @param len     - количество байт
+  * @return количество переданных байт или -1 при ошибке
+  */
+ int spi_transfer(uint8_t *tx_data, uint8_t *rx_data, int len) {
+     if (spi_fd < 0) {
+         fprintf(stderr, "SPI не инициализирован!\n");
+         return -1;
+     }
+ 
      struct spi_ioc_transfer spi = {
-         .tx_buf = (unsigned long)data,
-         .rx_buf = 0,
+         .tx_buf = (unsigned long)tx_data,
+         .rx_buf = (unsigned long)rx_data,
          .len = len,
-         .delay_usecs = 0, // задержка после отправки 
-         .speed_hz = 0,    // Используем установленную скорость
+         .delay_usecs = SPI_DELAY_US,
+         .speed_hz = current_speed,
          .bits_per_word = 8,
-         .cs_change = 0    // Не изменять CS между передачами
+         .cs_change = 0
      };
  
-     // Активируем устройство
      digitalWrite(CS_PIN, LOW);
  
-     // Выводим отправляемые данные
-     printf("Отправка %d байт в режиме %d: [", len, current_spi_mode);
+     printf("Отправка %d байт: [", len);
      for (int i = 0; i < len; i++) {
-         printf("0x%02X%s", data[i], (i < len-1) ? ", " : "");
+         printf("0x%02X%s", tx_data[i], (i < len-1) ? ", " : "");
      }
      printf("]\n");
  
-     // Отправляем данные
-     if (ioctl(spi_fd, SPI_IOC_MESSAGE(1), &spi) < 0) {
-         fprintf(stderr, "ERROR: Ошибка передачи SPI\n");
+     int ret = ioctl(spi_fd, SPI_IOC_MESSAGE(1), &spi);
+     if (ret < 0) {
+         perror("Ошибка передачи SPI");
+         digitalWrite(CS_PIN, HIGH);
+         return -1;
      }
  
-     // Деактивируем устройство
      digitalWrite(CS_PIN, HIGH);
-
      digitalWrite(GPIO_PIN, LOW);
-     usleep(10);
+     usleep(SPI_DELAY_US);
      digitalWrite(GPIO_PIN, HIGH);
-     //usleep(10);
+ 
+     printf("Принято %d байт: [", len);
+     for (int i = 0; i < len; i++) {
+         printf("0x%02X%s", rx_data[i], (i < len-1) ? ", " : "");
+     }
+     printf("]\n");
+ 
+     return len;
  }
-
- /**
- * Прием данных по SPI
- * @param data - указатель на буфер для приема данных
- * @param len  - количество байт для приема
- */
-void receive_spi_data(uint8_t *data, int len) {
-    struct spi_ioc_transfer spi = {
-        .tx_buf = 0,            // Не отправляем данные
-        .rx_buf = (unsigned long)data,
-        .len = len,
-        .delay_usecs = 0,
-        .speed_hz = 0,          // Используем установленную скорость
-        .bits_per_word = 8,
-        .cs_change = 0          // Не изменять CS между передачами
-    };
-
-    // Активируем устройство
-    digitalWrite(CS_PIN, LOW);
-
-    // Принимаем данные
-    if (ioctl(spi_fd, SPI_IOC_MESSAGE(1), &spi) < 0) {
-        fprintf(stderr, "ERROR: Ошибка приема SPI\n");
-    }
-
-    // Деактивируем устройство
-    digitalWrite(CS_PIN, HIGH);
-
-    // Выводим принятые данные
-    printf("Принято %d байт в режиме %d: [", len, current_spi_mode);
-    for (int i = 0; i < len; i++) {
-        printf("0x%02X%s", data[i], (i < len-1) ? ", " : "");
-    }
-    printf("]\n");
-}
  
  /**
   * Закрытие SPI
@@ -232,48 +229,32 @@ void receive_spi_data(uint8_t *data, int len) {
  void close_spi() {
      if (spi_fd >= 0) {
          close(spi_fd);
+         spi_fd = -1;
          printf("SPI устройство закрыто\n");
      }
  }
  
- /**
-  * Главная функция
-  */
  int main() {
-      printf("\n===== Инициализация SPI =====\n");
-      init_spi(SPI_BUS, SPI_CHANNEL, SPI_MODE, SPI_SPEED);
-      set_spi_bit_order(1); // 0 - msb -1 - lsb
-      // Тестовые данные
-      uint8_t test_data[] = {0b00000000, 0b00111110};
-      uint8_t test_data2[] = {0x56, 0x78};
-      //100 0000000 00 0000000 00 
-      printf("\n===== Тестовая передача =====\n");
-      send_spi_data(test_data, sizeof(test_data));
+     printf("\n===== Инициализация SPI =====\n");
+     if (init_spi(SPI_BUS, SPI_CHANNEL, SPI_MODE, SPI_SPEED)) {
+         fprintf(stderr, "Ошибка инициализации SPI!\n");
+         return 1;
+     }
  
-    //   printf("\n===== Смена режима на 2 =====\n");
-    //   set_spi_mode(2);  // Меняем режим без переинициализации
-      
-    //   printf("\n===== Тестовая передача в новом режиме =====\n");
-    //   send_spi_data(test_data2, sizeof(test_data2));
+     if (set_spi_bit_order(0)) {
+         fprintf(stderr, "Ошибка установки порядка бит!\n");
+         close_spi();
+         return 1;
+     }
  
-    //   printf("\n===== Возврат в режим 0 =====\n");
-    //   set_spi_mode(0);
-      
-    //   printf("\n===== Тестовая передача =====\n");
-    //   send_spi_data(test_data, sizeof(test_data));
+     uint8_t tx_data[] = {0xAA, 0x55, 0x01};  // Тестовые данные для отправки
+     uint8_t rx_data[sizeof(tx_data)] = {0};   // Буфер для приема
+     // 0b00100000
+     printf("\n===== Тестовая передача =====\n");
+     if (spi_transfer(tx_data, rx_data, sizeof(tx_data)) < 0) {
+         fprintf(stderr, "Ошибка передачи данных!\n");
+     }
  
-    //   printf("\n===== Завершение работы =====\n");
-    //   close_spi();
- 
-      return 0;
+     close_spi();
+     return 0;
  }
-
- //===== Инициализация SPI =====
-// Настроен CS на GPIO17
-// Открыто SPI устройство: /dev/spidev0.0
-// Режим SPI: 0 (CPOL=0, CPHA=0)
-// Скорость SPI: 1000000 Hz (1.0 MHz)
-// Ошибка установки порядка бит: Invalid argument
-
-// ===== Тестовая передача =====
-// Отправка 2 байт в режиме 0: [0x00, 0x3E]
