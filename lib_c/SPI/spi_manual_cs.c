@@ -170,6 +170,7 @@ void set_spi_bit_order(uint8_t lsb_first) {
  
      // Активируем устройство
      digitalWrite(CS_PIN, LOW);
+     usleep(10);
  
      // Выводим отправляемые данные
      printf("Отправка %d байт в режиме %d: [", len, current_spi_mode);
@@ -213,12 +214,12 @@ void receive_spi_data(uint8_t *data, int len) {
         return;
     }
 
-    // Подготовка dummy-данных для отправки
-    // uint8_t dummy_tx[len];
-    // memset(dummy_tx, 0xFF, len); // Стандартное значение для чтения
+    //Подготовка dummy-данных для отправки
+    uint8_t dummy_tx[len];
+    memset(dummy_tx, 0xFF, len); // Стандартное значение для чтения
     
     struct spi_ioc_transfer spi = {
-        .tx_buf = 0, //(unsigned long)dummy_tx
+        .tx_buf = (unsigned long)dummy_tx, //(unsigned long)dummy_tx
         .rx_buf = (unsigned long)data,
         .len = len,
         .delay_usecs = 10,
@@ -228,9 +229,9 @@ void receive_spi_data(uint8_t *data, int len) {
     };
 
     printf("\n=== Начало чтения ===\n");
-    // printf("Отправляем dummy: [");
-    // for (int i = 0; i < len; i++) printf("0x%02X ", dummy_tx[i]);
-    // printf("]\n");
+    printf("Отправляем dummy: [");
+    for (int i = 0; i < len; i++) printf("0x%02X ", dummy_tx[i]);
+    printf("]\n");
 
     // Выполняем передачу
     int ret = ioctl(spi_fd, SPI_IOC_MESSAGE(1), &spi);
@@ -258,6 +259,7 @@ void receive_spi_data(uint8_t *data, int len) {
     }
     printf("=== Конец чтения ===\n\n");
     digitalWrite(CS_PIN, HIGH);
+    usleep(10);
 }
  
  /**
@@ -289,3 +291,22 @@ void receive_spi_data(uint8_t *data, int len) {
  
       return 0;
  }
+//  ===== Инициализация SPI =====
+//  Настроен CS на GPIO17
+//  Открыто SPI устройство: /dev/spidev0.0
+//  Режим SPI: 0 (CPOL=0, CPHA=0)
+//  Скорость SPI: 1000000 Hz (1.0 MHz)
+//  Порядок бит установлен: MSB first
+ 
+//  ===== Тестовая передача =====
+//  Отправка 1 байт в режиме 0: [0x20]
+ 
+//  ===== Тестовая передача =====
+ 
+//  === Начало чтения ===
+//  Отправляем dummy: [0xFF 0xFF ]
+//  Успешно прочитано 2 байт
+//  RAW HEX: 00 00 
+//  DEC: 0 0 
+//  BIN: 00000000 00000000 
+//  === Конец чтения ===
