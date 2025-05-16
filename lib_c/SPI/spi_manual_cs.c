@@ -159,7 +159,7 @@ void set_spi_bit_order(uint8_t lsb_first) {
  void send_spi_data(uint8_t *data, int len) {
      struct spi_ioc_transfer spi = {
          .tx_buf = (unsigned long)data,
-         .rx_buf = (unsigned long)data,
+         .rx_buf = 0,
          .len = len,
          .delay_usecs = 0, // задержка после отправки 
          .speed_hz = 0,    // Используем установленную скорость
