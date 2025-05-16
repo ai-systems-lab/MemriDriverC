@@ -183,7 +183,7 @@ void set_spi_bit_order(uint8_t lsb_first) {
      }
  
      // Деактивируем устройство
-     digitalWrite(CS_PIN, HIGH);
+     
 
      digitalWrite(GPIO_PIN, LOW);
      usleep(10);
@@ -207,8 +207,6 @@ void receive_spi_data(uint8_t *data, int len) {
         .cs_change = 0          // Не изменять CS между передачами
     };
 
-    // Активируем устройство
-    digitalWrite(CS_PIN, LOW);
 
     // Принимаем данные
     if (ioctl(spi_fd, SPI_IOC_MESSAGE(1), &spi) < 0) {
