@@ -219,7 +219,7 @@ void set_spi_bit_order(uint8_t lsb_first) {
         perror("Ошибка SPI чтения");
         return;
     }
-
+    digitalWrite(CS_PIN, HIGH);
     printf("=== Прочитано %d байт ===\n", len);
     for (int i = 0; i < len; i++) {
         printf("Байт %d: 0x%02X (DEC: %3d, BIN: ", i, data[i], data[i]);
@@ -249,7 +249,7 @@ void set_spi_bit_order(uint8_t lsb_first) {
       printf("\n===== Инициализация SPI =====\n");
       init_spi(SPI_BUS, SPI_CHANNEL, 0, SPI_SPEED);
       set_spi_bit_order(0); // 0 - msb -1 - lsb
-
+      
       // Тестовые данные
       uint8_t test_data[] = {0b00100000};
       uint8_t receive_data[2] = {};
@@ -257,30 +257,28 @@ void set_spi_bit_order(uint8_t lsb_first) {
       printf("\n===== Тестовая передача =====\n");
       send_spi_data(test_data, sizeof(test_data));
 
-
+      printf("cs pin %d", digitalRead(CS_PIN));
       usleep(10);
       printf("\n===== Тестовая передача =====\n");
       receive_spi_data(receive_data, sizeof(receive_data));\
-
+      
+      printf("cs pin %d", digitalRead(CS_PIN));
       close_spi();
       return 0;
  }
+
 //  ===== Инициализация SPI =====
-//  Настроен CS на GPIO17
-//  Открыто SPI устройство: /dev/spidev0.0
-//  Режим SPI: 0 (CPOL=0, CPHA=0)
-//  Скорость SPI: 1000000 Hz (1.0 MHz)
-//  Порядок бит установлен: MSB first
- 
-//  ===== Тестовая передача =====
-//  Отправка 1 байт в режиме 0: [0x20]
- 
-//  ===== Тестовая передача =====
- 
-//  === Начало чтения ===
-//  Отправляем dummy: [0xFF 0xFF ]
-//  Успешно прочитано 2 байт
-//  RAW HEX: 00 00 
-//  DEC: 0 0 
-//  BIN: 00000000 00000000 
-//  === Конец чтения ===
+// Настроен CS на GPIO17
+// Открыто SPI устройство: /dev/spidev0.0
+// Режим SPI: 0 (CPOL=0, CPHA=0)
+// Скорость SPI: 1000000 Hz (1.0 MHz)
+// Порядок бит установлен: MSB first
+
+// ===== Тестовая передача =====
+// Отправка 1 байт в режиме 0: [0x20]
+// cs pin 0
+// ===== Тестовая передача =====
+// === Прочитано 2 байт ===
+// Байт 0: 0x00 (DEC:   0, BIN: 00000000)
+// Байт 1: 0x00 (DEC:   0, BIN: 00000000)
+// cs pin 1SPI устройство закрыто
