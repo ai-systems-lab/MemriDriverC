@@ -3,66 +3,60 @@
 #include <fcntl.h>
 #include <sys/ioctl.h>
 #include <stdio.h>
+#include <stdlib.h>
 #include <stdint.h>
 #include <unistd.h>
 #include <string.h>
 #include <errno.h>
 
+// Конфигурация
 #define SPI_BUS         0
 #define SPI_CHANNEL     0
 #define CS_PIN         17
-#define GPIO_PIN       22
 #define SPI_SPEED   1000000
+#define SPI_MODE        0
 
 int spi_fd = -1;
-int current_spi_mode = -1;
 
-void set_spi_mode(uint8_t mode) {
-    if (spi_fd < 0) return;
-
-    if (ioctl(spi_fd, SPI_IOC_WR_MODE, &mode) < 0) {
-        perror("Ошибка смены режима SPI");
-        return;
-    }
-    current_spi_mode = mode;
-}
-
-void init_spi(int bus, int channel, int mode, int speed) {
-    char spi_device[32];
+// Инициализация SPI (аналогична предыдущему примеру)
+int init_spi(int bus, int channel, int mode, int speed) {
+    char spi_device[20];
     snprintf(spi_device, sizeof(spi_device), "/dev/spidev%d.%d", bus, channel);
 
     if (wiringPiSetupGpio() == -1) {
-        fprintf(stderr, "Ошибка инициализации GPIO\n");
-        return;
+        fprintf(stderr, "Ошибка инициализации wiringPi\n");
+        return -1;
     }
 
     pinMode(CS_PIN, OUTPUT);
     digitalWrite(CS_PIN, HIGH);
 
-    pinMode(GPIO_PIN, OUTPUT);
-    digitalWrite(GPIO_PIN, HIGH);
-
     spi_fd = open(spi_device, O_RDWR);
     if (spi_fd < 0) {
-        perror("Ошибка открытия SPI");
-        return;
+        fprintf(stderr, "Ошибка открытия %s: %s\n", spi_device, strerror(errno));
+        return -1;
     }
 
-    set_spi_mode(mode);
+    if (ioctl(spi_fd, SPI_IOC_WR_MODE, &mode) < 0) {
+        fprintf(stderr, "Ошибка установки режима SPI: %s\n", strerror(errno));
+        close(spi_fd);
+        return -1;
+    }
 
     if (ioctl(spi_fd, SPI_IOC_WR_MAX_SPEED_HZ, &speed) < 0) {
-        perror("Ошибка установки скорости");
+        fprintf(stderr, "Ошибка установки скорости SPI: %s\n", strerror(errno));
+        close(spi_fd);
+        return -1;
     }
+
+    printf("SPI инициализировано: %s, режим %d, скорость %d Гц\n", spi_device, mode, speed);
+    return 0;
 }
 
-void send_spi_data(uint8_t *data, int len) {
-    if (spi_fd < 0) {
-        fprintf(stderr, "SPI не инициализирован\n");
-        return;
-    }
-
+// Отправка команды
+int send_spi_command(uint8_t *cmd, int len) {
     struct spi_ioc_transfer spi = {
-        .tx_buf = (unsigned long)data,
+        .tx_buf = (uintptr_t)cmd,
         .rx_buf = 0,
         .len = len,
         .delay_usecs = 0,
@@ -74,104 +68,88 @@ void send_spi_data(uint8_t *data, int len) {
     digitalWrite(CS_PIN, LOW);
     usleep(10);
 
-    printf("Отправка %d байт в режиме %d: [", len, current_spi_mode);
-    for (int i = 0; i < len; i++) {
-        printf("0x%02X%s", data[i], (i < len - 1) ? ", " : "");
-    }
-    printf("]\n");
-
     if (ioctl(spi_fd, SPI_IOC_MESSAGE(1), &spi) < 0) {
-        fprintf(stderr, "Ошибка передачи SPI: %s\n", strerror(errno));
-    }
-
-
-    digitalWrite(GPIO_PIN, LOW);
-    usleep(10);
-    digitalWrite(GPIO_PIN, HIGH);
-}
-
-void receive_spi_data(uint8_t *data, int len) {
-    if (spi_fd < 0) {
-        fprintf(stderr, "SPI не инициализирован\n");
-        return;
-    }
-
-    printf("\n=== Начало чтения ===\n");
-
-
-    for (int i = 0; i < len; i++) {
-        uint8_t dummy_tx = 0xFF;
-        uint8_t rx_byte = 0;
-
-        struct spi_ioc_transfer spi = {
-            .tx_buf = (unsigned long)&dummy_tx,
-            .rx_buf = (unsigned long)&rx_byte,
-            .len = 1,
-            .delay_usecs = 10,
-            .speed_hz = 0,
-            .bits_per_word = 8,
-            .cs_change = 0
-        };
-
-        int ret = ioctl(spi_fd, SPI_IOC_MESSAGE(1), &spi);
-        if (ret < 0) {
-            perror("Ошибка чтения байта");
-            data[i] = 0xFF;
-        } else {
-            data[i] = rx_byte;
-            printf("Байт %d: 0x%02X (DEC: %3d, BIN: ", i, rx_byte, rx_byte);
-            for (int j = 7; j >= 0; j--) {
-                printf("%d", (rx_byte >> j) & 1);
-            }
-            printf(")\n");
-        }
-
-        usleep(10);
+        fprintf(stderr, "Ошибка отправки команды: %s\n", strerror(errno));
+        digitalWrite(CS_PIN, HIGH);
+        return -1;
     }
 
     digitalWrite(CS_PIN, HIGH);
     usleep(10);
-    printf("=== Прочитано %d байт ===\n\n", len);
+    return 0;
 }
 
-void test_all_modes() {
-    uint8_t tx_cmd = 0b00100000;
-    uint8_t rx_data[2] = {0};
+// Чтение данных после команды
+int read_spi_data_after_command(uint8_t *cmd, int cmd_len, uint8_t *data, int data_len) {
+    if (spi_fd < 0) {
+        fprintf(stderr, "SPI не инициализирован\n");
+        return -1;
+    }
 
-    for (int mode = 0; mode < 4; mode++) {
-        set_spi_mode(mode);
-        printf("\n=== Тестирование режима %d (CPOL=%d, CPHA=%d) ===\n",
-               mode, (mode >> 1) & 1, mode & 1);
+    // Отправляем команду
+    if (send_spi_command(cmd, cmd_len) < 0) {
+        return -1;
+    }
 
-        send_spi_data(&tx_cmd, 1);
-        usleep(1000);
+    // Читаем данные
+    uint8_t dummy_tx[data_len];
+    memset(dummy_tx, 0xFF, data_len);
 
-        memset(rx_data, 0, sizeof(rx_data));
-        receive_spi_data(rx_data, sizeof(rx_data));
+    struct spi_ioc_transfer spi = {
+        .tx_buf = (uintptr_t)dummy_tx,
+        .rx_buf = (uintptr_t)data,
+        .len = data_len,
+        .delay_usecs = 0,
+        .speed_hz = 0,
+        .bits_per_word = 8,
+        .cs_change = 0
+    };
 
-        printf("Ответ: ");
-        for (int i = 0; i < sizeof(rx_data); i++) {
-            printf("0x%02X ", rx_data[i]);
-        }
-        printf("\n");
+    digitalWrite(CS_PIN, LOW);
+    usleep(10);
 
-        usleep(50000);
+    if (ioctl(spi_fd, SPI_IOC_MESSAGE(1), &spi) < 0) {
+        fprintf(stderr, "Ошибка чтения SPI: %s\n", strerror(errno));
+        digitalWrite(CS_PIN, HIGH);
+        return -1;
+    }
+
+    digitalWrite(CS_PIN, HIGH);
+    usleep(10);
+
+    printf("Прочитано %d байт: ", data_len);
+    for (int i = 0; i < data_len; i++) {
+        printf("0x%02X ", data[i]);
+    }
+    printf("\n");
+
+    return data_len;
+}
+
+// Закрытие SPI
+void close_spi() {
+    if (spi_fd >= 0) {
+        close(spi_fd);
+        spi_fd = -1;
+        printf("SPI закрыто\n");
     }
 }
 
 int main() {
-    printf("===== Всесторонняя диагностика SPI =====\n");
-
-    init_spi(SPI_BUS, SPI_CHANNEL, 0, SPI_SPEED);
-
-    if (spi_fd < 0) {
-        fprintf(stderr, "SPI не инициализирован, завершение.\n");
+    if (init_spi(SPI_BUS, SPI_CHANNEL, SPI_MODE, SPI_SPEED) < 0) {
         return 1;
     }
 
-    printf("\nТестирование всех режимов SPI:\n");
-    test_all_modes();
+    // Команда для устройства (пример)
+    uint8_t command[] = {0b00100000}; // Команда чтения (зависит от устройства)
+    uint8_t data[2] = {0};
 
-    close(spi_fd);
+    // Чтение после команды
+    if (read_spi_data_after_command(command, sizeof(command), data, sizeof(data)) < 0) {
+        close_spi();
+        return 1;
+    }
+
+    close_spi();
     return 0;
 }
