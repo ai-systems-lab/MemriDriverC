@@ -10,20 +10,13 @@
 #include <errno.h>
 #include "MVM_SPI.h"
 
-// Конфигурация SPI
-#define SPI_BUS         0       // 0 (SPI0)
-#define SPI_CHANNEL     0       // 0 (канал SPI)
-#define CS_PIN         17       // GPIO для Chip Select
-#define SPI_SPEED   15000000    // Скорость 15 МГц как в Python коде
-
 // Глобальные переменные
-int current_spi_mode;
+static int spi_fd;
+static int current_spi_mode;
 
-typedef struct {
-    int spi_fd;
-    void (*write)(uint8_t *data, int len);
-    void (*read)(uint8_t *data, int len);
-} SPI_send;
+void SPI_send_init(SPI_send *spi) {
+    spi->spi_fd = -1;
+}
 
 // Инициализация SPI
 void init_spi(int bus, int channel, int mode, int speed) {

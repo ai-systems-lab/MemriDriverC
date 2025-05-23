@@ -9,6 +9,12 @@
 #define CS_PIN         17
 #define SPI_SPEED   15000000
 
+typedef struct {
+    int spi_fd;
+} SPI_send;
+
+// Прототипы функций SPI
+void SPI_send_init(SPI_send *spi);
 void init_spi(int bus, int channel, int mode, int speed);
 void set_spi_mode(uint8_t mode);
 void spi_writebytes(uint8_t *data, int len);
@@ -25,5 +31,9 @@ void key_set_MVM_on(uint8_t mask);
 void key_set_MVM_off(void);
 void mwm_dac_pd_on(void);
 void mwm_dac_pd_off(void);
+
+// Дополнительные функции режимов
+void set_mode_0(void);
+void set_mode_1(void);
 
 #endif // SPI_DRIVER_H
