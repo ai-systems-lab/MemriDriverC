@@ -196,14 +196,13 @@ uint16_t adc_read() {
     return ((res[0] << 6) | (res[1] >> 2));
 }
 
-// Установка маски ключей MVM
 void key_set_MVM_on_mask(uint8_t mask) {
     spi_writebytes(&mask, 1);
 }
-
 // Включение ключей MVM
-void key_set_MVM_on(uint8_t mask) {
-    spi_writebytes(&mask, 1);
+void key_set_MVM_on() {
+    uint8_t value = 0xff;
+    spi_writebytes(&value, 1);
 }
 
 // Выключение ключей MVM

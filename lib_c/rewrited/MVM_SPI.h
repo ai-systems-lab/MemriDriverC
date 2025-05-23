@@ -27,7 +27,7 @@ void mvm_dac(uint16_t bitvalue, uint8_t channel);
 void wr_dac(uint16_t bitvalue);
 uint16_t adc_read(void);
 void key_set_MVM_on_mask(uint8_t mask);
-void key_set_MVM_on(uint8_t mask);
+void key_set_MVM_on();
 void key_set_MVM_off(void);
 void mwm_dac_pd_on(void);
 void mwm_dac_pd_off(void);

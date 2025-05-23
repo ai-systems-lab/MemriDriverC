@@ -464,15 +464,7 @@ void fast_mvm_ON(RPI_modes *rpi) {
     digitalWrite(4, LOW);
     digitalWrite(4, HIGH);
     
-    // Close all keys 714
-    for (int i = 0; i < 4; i++) {
-        bl_key_cs_L(&rpi->reg, i);
-        reg_update(&rpi->reg);
-        set_mode_1();
-        key_set_MVM_on(&rpi->mvm_spi);
-        bl_key_cs_H(&rpi->reg, i);
-        reg_update(&rpi->reg);
-    }
+   
     
     // Disable commutation
     digitalWrite(13, LOW);
@@ -514,6 +506,29 @@ void fast_mvm_OFF(RPI_modes *rpi) {
 void fast_mvm(RPI_modes *rpi, uint16_t *vDAC_mas, uint16_t tms, uint16_t tus, 
               uint16_t rtms, uint16_t rums, uint8_t wl, uint16_t id, 
               uint16_t *result, uint16_t *ret_id) {
+
+    uint8_t mask[32];
+    for (int i = 0; i < 32; i++) {
+        mask[i] = vDAC_mas[i] > 0 ? 1 : 0;
+    }
+    uint8_t mask_bytes[4] = {0};
+    for (int i = 0; i < 4; i++) {
+        for (int j = 0; j < 8; j++) {
+            mask_bytes[i] |= (mask[i * 8 + j] << j);
+        }
+    }
+                     
+     // Close all keys 714
+     for (int i = 0; i < 4; i++) {
+        bl_key_cs_L(&rpi->reg, i);
+        reg_update(&rpi->reg);
+        set_mode_1();
+        key_set_MVM_on(mask_bytes[i]);
+        bl_key_cs_H(&rpi->reg, i);
+        reg_update(&rpi->reg);
+    }
+    
+    
     // Set commutation wl
     if (wl >= 0 && wl <= 7) {
         digitalWrite(17, (wl & 0b1) ? HIGH : LOW);

@@ -27,11 +27,6 @@
 #define BUZZER_PIN 21
 #define LED_PIN 19
 
-
-typedef struct {
-    uint8_t main_bytes[2];
-} RegControl595;
-
 void RegControl595_init(RegControl595 *reg) {
     reg->main_bytes[0] = 0xf0;
     reg->main_bytes[1] = 0x20;
