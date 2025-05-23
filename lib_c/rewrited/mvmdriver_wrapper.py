@@ -88,9 +88,9 @@ class MVMDriver:
 if __name__ == "__main__":
     driver = MVMDriver()
     # Тест mode_7
-    result, id = driver.mode_7(245, 1, 0, 0, 123, 0, 0)
+    result, id = driver.mode_7(0, 0, 0, 0, 123, 0, 0)
     print(f"mode_7 result: {result}, id: {id}")
-    # Тест mode_mvm
-    vDAC_mas = [100] * 32  # Пример массива
-    result, id = driver.mode_mvm(vDAC_mas, 1, 0, 0, 0, 0, 123)
-    print(f"mode_mvm result: {result}, id: {id}")
+    # # Тест mode_mvm
+    # vDAC_mas = [100] * 32  # Пример массива
+    # result, id = driver.mode_mvm(vDAC_mas, 1, 0, 0, 0, 0, 123)
+    # print(f"mode_mvm result: {result}, id: {id}")

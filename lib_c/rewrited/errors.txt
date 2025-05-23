@@ -1,122 +1,83 @@
-(.pkg_venv) admin@raspberrypi:~/Desktop/test_bcm2835/kurs_neuro_c/lib_c/rewrited $ gcc -shared -o libmvmdriver.so -fPIC rpi_modes.c MVM_SPI.c r595hc.c -lwiringPi
-rpi_modes.c: In function ‘mode_mvm’:
-rpi_modes.c:409:5: error: too many arguments to function ‘spdt_select_mode_for_ADC_mvm’
-  409 |     spdt_select_mode_for_ADC_mvm(&rpi->reg);
-      |     ^~~~~~~~~~~~~~~~~~~~~~~~~~~~
-In file included from rpi_modes.c:7:
-r595hc.h:27:6: note: declared here
-   27 | void spdt_select_mode_for_ADC_mvm(void);
-      |      ^~~~~~~~~~~~~~~~~~~~~~~~~~~~
-rpi_modes.c: In function ‘fast_mvm_ON’:
-rpi_modes.c:472:24: warning: passing argument 1 of ‘key_set_MVM_on’ makes integer from pointer without a cast [-Wint-conversion]
-  472 |         key_set_MVM_on(&rpi->mvm_spi);
-      |                        ^~~~~~~~~~~~~
-      |                        |
-      |                        SPI_send *
-In file included from rpi_modes.c:8:
-MVM_SPI.h:30:29: note: expected ‘uint8_t’ {aka ‘unsigned char’} but argument is of type ‘SPI_send *’
-   30 | void key_set_MVM_on(uint8_t mask);
-      |                     ~~~~~~~~^~~~
-rpi_modes.c:489:5: error: too many arguments to function ‘spdt_select_mode_for_ADC_mvm’
-  489 |     spdt_select_mode_for_ADC_mvm(&rpi->reg);
-      |     ^~~~~~~~~~~~~~~~~~~~~~~~~~~~
-r595hc.h:27:6: note: declared here
-   27 | void spdt_select_mode_for_ADC_mvm(void);
-      |      ^~~~~~~~~~~~~~~~~~~~~~~~~~~~
-r595hc.c:33:3: error: conflicting types for ‘RegControl595’; have ‘struct <anonymous>’
-   33 | } RegControl595;
-      |   ^~~~~~~~~~~~~
-In file included from r595hc.c:7:
-r595hc.h:9:3: note: previous declaration of ‘RegControl595’ with type ‘RegControl595’
-    9 | } RegControl595;
-      |   ^~~~~~~~~~~~~
-r595hc.c:35:6: error: conflicting types for ‘RegControl595_init’; have ‘void(RegControl595 *)’
-   35 | void RegControl595_init(RegControl595 *reg) {
-      |      ^~~~~~~~~~~~~~~~~~
-r595hc.h:11:6: note: previous declaration of ‘RegControl595_init’ with type ‘void(RegControl595 *)’
-   11 | void RegControl595_init(RegControl595 *reg);
-      |      ^~~~~~~~~~~~~~~~~~
-r595hc.c:101:6: error: conflicting types for ‘reg_update’; have ‘void(RegControl595 *)’
-  101 | void reg_update(RegControl595 *reg) {
-      |      ^~~~~~~~~~
-r595hc.h:12:6: note: previous declaration of ‘reg_update’ with type ‘void(RegControl595 *)’
-   12 | void reg_update(RegControl595 *reg);
-      |      ^~~~~~~~~~
-r595hc.c:108:6: error: conflicting types for ‘bl_key_cs_H’; have ‘void(RegControl595 *, uint8_t)’ {aka ‘void(RegControl595 *, unsigned char)’}
-  108 | void bl_key_cs_H(RegControl595 *reg, uint8_t n) {
-      |      ^~~~~~~~~~~
-r595hc.h:13:6: note: previous declaration of ‘bl_key_cs_H’ with type ‘void(RegControl595 *, uint8_t)’ {aka ‘void(RegControl595 *, unsigned char)’}
-   13 | void bl_key_cs_H(RegControl595 *reg, uint8_t n);
-      |      ^~~~~~~~~~~
-r595hc.c:111:6: error: conflicting types for ‘bl_key_cs_L’; have ‘void(RegControl595 *, uint8_t)’ {aka ‘void(RegControl595 *, unsigned char)’}
-  111 | void bl_key_cs_L(RegControl595 *reg, uint8_t n) {
-      |      ^~~~~~~~~~~
-r595hc.h:14:6: note: previous declaration of ‘bl_key_cs_L’ with type ‘void(RegControl595 *, uint8_t)’ {aka ‘void(RegControl595 *, unsigned char)’}
-   14 | void bl_key_cs_L(RegControl595 *reg, uint8_t n);
-      |      ^~~~~~~~~~~
-r595hc.c:115:6: error: conflicting types for ‘in_mux_set’; have ‘void(RegControl595 *, uint8_t)’ {aka ‘void(RegControl595 *, unsigned char)’}
-  115 | void in_mux_set(RegControl595 *reg, uint8_t n) {
-      |      ^~~~~~~~~~
-r595hc.h:15:6: note: previous declaration of ‘in_mux_set’ with type ‘void(RegControl595 *, uint8_t)’ {aka ‘void(RegControl595 *, unsigned char)’}
-   15 | void in_mux_set(RegControl595 *reg, uint8_t n);
-      |      ^~~~~~~~~~
-r595hc.c:120:6: error: conflicting types for ‘wr_spdt_H’; have ‘void(RegControl595 *, uint8_t)’ {aka ‘void(RegControl595 *, unsigned char)’}
-  120 | void wr_spdt_H(RegControl595 *reg, uint8_t n) {
-      |      ^~~~~~~~~
-r595hc.h:16:6: note: previous declaration of ‘wr_spdt_H’ with type ‘void(RegControl595 *, uint8_t)’ {aka ‘void(RegControl595 *, unsigned char)’}
-   16 | void wr_spdt_H(RegControl595 *reg, uint8_t n);
-      |      ^~~~~~~~~
-r595hc.c:123:6: error: conflicting types for ‘wr_spdt_L’; have ‘void(RegControl595 *, uint8_t)’ {aka ‘void(RegControl595 *, unsigned char)’}
-  123 | void wr_spdt_L(RegControl595 *reg, uint8_t n) {
-      |      ^~~~~~~~~
-r595hc.h:17:6: note: previous declaration of ‘wr_spdt_L’ with type ‘void(RegControl595 *, uint8_t)’ {aka ‘void(RegControl595 *, unsigned char)’}
-   17 | void wr_spdt_L(RegControl595 *reg, uint8_t n);
-      |      ^~~~~~~~~
-r595hc.c:127:6: error: conflicting types for ‘in_mux_EN_H’; have ‘void(RegControl595 *, uint8_t)’ {aka ‘void(RegControl595 *, unsigned char)’}
-  127 | void in_mux_EN_H(RegControl595 *reg, uint8_t n) {
-      |      ^~~~~~~~~~~
-r595hc.h:18:6: note: previous declaration of ‘in_mux_EN_H’ with type ‘void(RegControl595 *, uint8_t)’ {aka ‘void(RegControl595 *, unsigned char)’}
-   18 | void in_mux_EN_H(RegControl595 *reg, uint8_t n);
-      |      ^~~~~~~~~~~
-r595hc.c:130:6: error: conflicting types for ‘in_mux_EN_L’; have ‘void(RegControl595 *, uint8_t)’ {aka ‘void(RegControl595 *, unsigned char)’}
-  130 | void in_mux_EN_L(RegControl595 *reg, uint8_t n) {
-      |      ^~~~~~~~~~~
-r595hc.h:19:6: note: previous declaration of ‘in_mux_EN_L’ with type ‘void(RegControl595 *, uint8_t)’ {aka ‘void(RegControl595 *, unsigned char)’}
-   19 | void in_mux_EN_L(RegControl595 *reg, uint8_t n);
-      |      ^~~~~~~~~~~
-r595hc.c:134:6: error: conflicting types for ‘wr_dac_cs_H’; have ‘void(RegControl595 *)’
-  134 | void wr_dac_cs_H(RegControl595 *reg) {
-      |      ^~~~~~~~~~~
-r595hc.h:20:6: note: previous declaration of ‘wr_dac_cs_H’ with type ‘void(RegControl595 *)’
-   20 | void wr_dac_cs_H(RegControl595 *reg);
-      |      ^~~~~~~~~~~
-r595hc.c:137:6: error: conflicting types for ‘wr_dac_cs_L’; have ‘void(RegControl595 *)’
-  137 | void wr_dac_cs_L(RegControl595 *reg) {
-      |      ^~~~~~~~~~~
-r595hc.h:21:6: note: previous declaration of ‘wr_dac_cs_L’ with type ‘void(RegControl595 *)’
-   21 | void wr_dac_cs_L(RegControl595 *reg);
-      |      ^~~~~~~~~~~
-r595hc.c:141:6: error: conflicting types for ‘wr_spdt_comm_H’; have ‘void(RegControl595 *)’
-  141 | void wr_spdt_comm_H(RegControl595 *reg) {
-      |      ^~~~~~~~~~~~~~
-r595hc.h:22:6: note: previous declaration of ‘wr_spdt_comm_H’ with type ‘void(RegControl595 *)’
-   22 | void wr_spdt_comm_H(RegControl595 *reg);
-      |      ^~~~~~~~~~~~~~
-r595hc.c:144:6: error: conflicting types for ‘wr_spdt_comm_L’; have ‘void(RegControl595 *)’
-  144 | void wr_spdt_comm_L(RegControl595 *reg) {
-      |      ^~~~~~~~~~~~~~
-r595hc.h:23:6: note: previous declaration of ‘wr_spdt_comm_L’ with type ‘void(RegControl595 *)’
-   23 | void wr_spdt_comm_L(RegControl595 *reg);
-      |      ^~~~~~~~~~~~~~
-r595hc.c:148:6: error: conflicting types for ‘spdt_select_mode_H’; have ‘void(RegControl595 *)’
-  148 | void spdt_select_mode_H(RegControl595 *reg) {
-      |      ^~~~~~~~~~~~~~~~~~
-r595hc.h:24:6: note: previous declaration of ‘spdt_select_mode_H’ with type ‘void(RegControl595 *)’
-   24 | void spdt_select_mode_H(RegControl595 *reg);
-      |      ^~~~~~~~~~~~~~~~~~
-r595hc.c:151:6: error: conflicting types for ‘spdt_select_mode_L’; have ‘void(RegControl595 *)’
-  151 | void spdt_select_mode_L(RegControl595 *reg) {
-      |      ^~~~~~~~~~~~~~~~~~
-r595hc.h:25:6: note: previous declaration of ‘spdt_select_mode_L’ with type ‘void(RegControl595 *)’
-   25 | void spdt_select_mode_L(RegControl595 *reg);
-      |      ^~~~~~~~~~~~~~~~~~
+Отправка 2 байт в режиме 0: [0x80, 0x0D]
+ERROR: Ошибка передачи SPI
+Отправка 2 байт в режиме 0: [0x80, 0x0D]
+ERROR: Ошибка передачи SPI
+Отправка 2 байт в режиме 0: [0x80, 0x0D]
+ERROR: Ошибка передачи SPI
+Отправка 2 байт в режиме 0: [0x80, 0x0D]
+ERROR: Ошибка передачи SPI
+Отправка 2 байт в режиме 0: [0xC0, 0xFF]
+ERROR: Ошибка передачи SPI
+Ошибка смены режима SPI: Inappropriate ioctl for device
+Отправка 1 байт в режиме 0: [0x00]
+ERROR: Ошибка передачи SPI
+Ошибка смены режима SPI: Inappropriate ioctl for device
+Отправка 1 байт в режиме 0: [0x00]
+ERROR: Ошибка передачи SPI
+Ошибка смены режима SPI: Inappropriate ioctl for device
+Отправка 1 байт в режиме 0: [0x00]
+ERROR: Ошибка передачи SPI
+Ошибка смены режима SPI: Inappropriate ioctl for device
+Отправка 1 байт в режиме 0: [0x00]
+ERROR: Ошибка передачи SPI
+Ошибка смены режима SPI: Inappropriate ioctl for device
+Отправка 2 байт в режиме 0: [0x30, 0x00]
+ERROR: Ошибка передачи SPI
+Ошибка смены режима SPI: Inappropriate ioctl for device
+Отправка 2 байт в режиме 0: [0x30, 0x00]
+ERROR: Ошибка передачи SPI
+Ошибка смены режима SPI: Inappropriate ioctl for device
+Отправка 2 байт в режиме 0: [0x30, 0xF6]
+ERROR: Ошибка передачи SPI
+Ошибка смены режима SPI: Inappropriate ioctl for device
+Ошибка SPI чтения: Inappropriate ioctl for device
+Отправка 2 байт в режиме 0: [0x00, 0x00]
+ERROR: Ошибка передачи SPI
+Ошибка SPI чтения: Inappropriate ioctl for device
+Отправка 2 байт в режиме 0: [0x00, 0x00]
+ERROR: Ошибка передачи SPI
+Ошибка SPI чтения: Inappropriate ioctl for device
+Отправка 2 байт в режиме 0: [0x00, 0x00]
+ERROR: Ошибка передачи SPI
+Ошибка SPI чтения: Inappropriate ioctl for device
+Отправка 2 байт в режиме 0: [0x00, 0x00]
+ERROR: Ошибка передачи SPI
+Ошибка SPI чтения: Inappropriate ioctl for device
+Отправка 2 байт в режиме 0: [0x00, 0x00]
+ERROR: Ошибка передачи SPI
+Ошибка SPI чтения: Inappropriate ioctl for device
+Отправка 2 байт в режиме 0: [0x00, 0x00]
+ERROR: Ошибка передачи SPI
+Ошибка SPI чтения: Inappropriate ioctl for device
+Отправка 2 байт в режиме 0: [0x00, 0x00]
+ERROR: Ошибка передачи SPI
+Ошибка SPI чтения: Inappropriate ioctl for device
+Отправка 2 байт в режиме 0: [0x00, 0x00]
+ERROR: Ошибка передачи SPI
+Ошибка SPI чтения: Inappropriate ioctl for device
+Отправка 2 байт в режиме 0: [0x00, 0x00]
+ERROR: Ошибка передачи SPI
+Ошибка SPI чтения: Inappropriate ioctl for device
+Отправка 2 байт в режиме 0: [0x00, 0x00]
+ERROR: Ошибка передачи SPI
+Ошибка SPI чтения: Inappropriate ioctl for device
+Отправка 2 байт в режиме 0: [0x00, 0x00]
+ERROR: Ошибка передачи SPI
+Ошибка смены режима SPI: Inappropriate ioctl for device
+Отправка 2 байт в режиме 0: [0x30, 0x00]
+ERROR: Ошибка передачи SPI
+Ошибка смены режима SPI: Inappropriate ioctl for device
+Отправка 1 байт в режиме 0: [0x00]
+ERROR: Ошибка передачи SPI
+Ошибка смены режима SPI: Inappropriate ioctl for device
+Отправка 1 байт в режиме 0: [0x00]
+ERROR: Ошибка передачи SPI
+Ошибка смены режима SPI: Inappropriate ioctl for device
+Отправка 1 байт в режиме 0: [0x00]
+ERROR: Ошибка передачи SPI
+Ошибка смены режима SPI: Inappropriate ioctl for device
+Отправка 1 байт в режиме 0: [0x00]
+ERROR: Ошибка передачи SPI
+Отправка 2 байт в режиме 0: [0xC0, 0x00]
+ERROR: Ошибка передачи SPI
+Segmentation fault
