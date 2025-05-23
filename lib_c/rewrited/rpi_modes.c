@@ -47,7 +47,7 @@ void mode_7(RPI_modes *rpi, uint16_t vDAC, uint16_t tms, uint16_t tus, uint8_t r
     for (int i = 0; i < 4; i++) {
         bl_key_cs_L(&rpi->reg, i);
         reg_update(&rpi->reg);
-        //set_mode_1();
+        set_mode_1();
         key_set_MVM_off();
         bl_key_cs_H(&rpi->reg, i);
         reg_update(&rpi->reg);
@@ -113,7 +113,7 @@ void mode_7(RPI_modes *rpi, uint16_t vDAC, uint16_t tms, uint16_t tus, uint8_t r
     digitalWrite(12, HIGH);
     
     // Wait
-    usleep(tms * 1000 + tus);
+    //usleep(tms * 1000 + tus);
     
     // Set ZERO on WR DAC
     wr_dac_cs_L(&rpi->reg);
