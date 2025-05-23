@@ -4,7 +4,7 @@
 #include <stdlib.h>
 #include <stdint.h>
 #include <unistd.h>
-#include "r595hc.c"
+#include "r595hc.h"
 #include "MVM_SPI.h"
 
 typedef struct {

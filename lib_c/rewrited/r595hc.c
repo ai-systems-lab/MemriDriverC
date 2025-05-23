@@ -4,6 +4,7 @@
 #include <stdlib.h>
 #include <stdint.h>
 #include <unistd.h>
+#include "r595hc.h"
 
 #define SHCP_PIN 23
 #define STCP_PIN 24
@@ -25,6 +26,7 @@
 
 #define BUZZER_PIN 21
 #define LED_PIN 19
+
 
 typedef struct {
     uint8_t main_bytes[2];
