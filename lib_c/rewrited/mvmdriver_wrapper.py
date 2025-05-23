@@ -51,8 +51,10 @@ class MVMDriver:
     
     def mode_7(self, vDAC, tms, tus, rev, id, wl, bl):
         result = c_uint16(0)
-        mvmdriver.mode_7(byref(self.rpi), vDAC, tms, tus, rev, id, wl, bl, byref(result))
-        return result.value, id
+        ret_id = c_uint16(0)
+        mvmdriver.mode_7(byref(self.rpi), vDAC, tms, tus, rev, id, wl, bl, 
+                        byref(result), byref(ret_id))
+        return result.value, ret_id.value
     
     def mode_9(self, vDAC, id, wl, bl):
         result = c_uint16(0)
