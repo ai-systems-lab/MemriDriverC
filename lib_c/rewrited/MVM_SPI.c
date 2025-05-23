@@ -8,6 +8,7 @@
 #include <unistd.h>
 #include <string.h>
 #include <errno.h>
+#include "MVM_SPI.h"
 
 // Конфигурация SPI
 #define SPI_BUS         0       // 0 (SPI0)
