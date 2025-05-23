@@ -93,7 +93,7 @@ void spi_writebytes(uint8_t *data, int len) {
     };
 
     digitalWrite(CS_PIN, LOW);
-    usleep(10);
+    //usleep(10);
 
 
     if (ioctl(spi_fd, SPI_IOC_MESSAGE(1), &spi) < 0) {
