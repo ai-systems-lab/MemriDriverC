@@ -1,9 +1,13 @@
 from ctypes import *
 import os
-
+import sys
+from rpi_modes import RPI_modes as RPi_modess
+import time
 # Загружаем разделяемую библиотеку
 lib_path = os.path.join(os.path.dirname(__file__), 'libmvmdriver.so')
 mvmdriver = CDLL(lib_path)
+
+sys.stderr = sys.stdout
 
 # Определяем структуры
 class RegControl595(Structure):
@@ -88,10 +92,23 @@ class MVMDriver:
         return result.value, id
 
 if __name__ == "__main__":
-    driver = MVMDriver()
+    #driver = MVMDriver()
+
+    pdriver = RPi_modess()
+
     # Тест mode_7
-    result, id = driver.mode_7(0, 0, 0, 0, 123, 0, 0)
+    #result, id = driver.mode_7(0, 0, 0, 0, 123, 1,5)
+    #print(f"mode_7 result: {result}, id: {id}")
+
+    # mas = [0,100,100,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0]
+    # start = time.time()
+    # for i in range(10000):
+    #     result, id = driver.mode_mvm(mas, 0,0,0,0,0,123)
+    # end = time.time()
+
+    result, id = pdriver.mode_7(0, 0, 0, 0, 123, 1,5)
     print(f"mode_7 result: {result}, id: {id}")
+    # print(f"time:{start-end}")
     # # Тест mode_mvm
     # vDAC_mas = [100] * 32  # Пример массива
     # result, id = driver.mode_mvm(vDAC_mas, 1, 0, 0, 0, 0, 123)

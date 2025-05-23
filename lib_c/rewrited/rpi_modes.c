@@ -72,6 +72,13 @@ void mode_7(RPI_modes *rpi, uint16_t vDAC, uint16_t tms, uint16_t tus, uint8_t r
     
     // Set commutation wl
     if (wl >= 0 && wl <= 7) {
+
+        uint8_t bit0 = wl & 0b1;
+        uint8_t bit1 = (wl >> 1) & 0b1;
+        uint8_t bit2 = (wl >> 2) & 0b1;
+        
+        printf("WL decomposition: wl=%d, bit0=%d, bit1=%d, bit2=%d\n", wl, bit0, bit1, bit2);
+
         digitalWrite(17, (wl & 0b1) ? HIGH : LOW);
         digitalWrite(27, (wl >> 1 & 0b1) ? HIGH : LOW);
         digitalWrite(22, (wl >> 2 & 0b1) ? HIGH : LOW);
@@ -607,7 +614,7 @@ int main() {
     
     uint16_t result, ret_id;
     //0, 0, 0, 0, 123, 1,5
-    mode_7(&rpi, 0, 0, 0, 0, 123, 1, 5, &result, &ret_id);
+    mode_7(&rpi, 0, 0, 0, 0, 123, 2, 5, &result, &ret_id);
     printf("Result: %d, ID: %d\n", result, ret_id);
     
     return 0;

@@ -1,5 +1,5 @@
-import MemriCORE.MVM_SPI as MVM_SPI
-import MemriCORE.r595hc as r595hc
+import MVM_SPI as MVM_SPI
+import r595hc as r595hc
 import spidev
 import RPi.GPIO as gpio
 import time
