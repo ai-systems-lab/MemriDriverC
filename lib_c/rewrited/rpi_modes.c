@@ -140,7 +140,7 @@ void mode_7(RPI_modes *rpi, uint16_t vDAC, uint16_t tms, uint16_t tus, uint8_t r
     
     // Read from ADC
     *result = 0;
-    spdt_select_mode_for_ADC_wr(&rpi->reg);
+    spdt_select_mode_for_ADC_wr();
     set_mode_1();
     digitalWrite(25, LOW);
     adc_read();
@@ -273,7 +273,7 @@ void mode_9(RPI_modes *rpi, uint16_t vDAC, uint16_t id, uint8_t wl, uint8_t bl,
     digitalWrite(12, HIGH);
     
     // Read from ADC
-    spdt_select_mode_for_ADC_wr(&rpi->reg);
+    spdt_select_mode_for_ADC_wr();
     set_mode_1();
     digitalWrite(25, LOW);
     adc_read();
@@ -406,7 +406,7 @@ void mode_mvm(RPI_modes *rpi, uint16_t *vDAC_mas, uint16_t tms, uint16_t tus,
     digitalWrite(4, HIGH);
     
     // Read from ADC
-    spdt_select_mode_for_ADC_mvm(&rpi->reg);
+    spdt_select_mode_for_ADC_mvm();
     set_mode_1();
     digitalWrite(25, LOW);
     adc_read();
@@ -416,7 +416,7 @@ void mode_mvm(RPI_modes *rpi, uint16_t *vDAC_mas, uint16_t tms, uint16_t tus,
     *result = adc_read();
     digitalWrite(25, HIGH);
     
-    spdt_select_mode_for_ADC_wr(&rpi->reg);
+    spdt_select_mode_for_ADC_wr();
     
     // Set ZERO to MVM DACs
     set_mode_1();
@@ -486,7 +486,7 @@ void fast_mvm_ON(RPI_modes *rpi) {
     spdt_select_mode_H(&rpi->reg);
     reg_update(&rpi->reg);
     
-    spdt_select_mode_for_ADC_mvm(&rpi->reg);
+    spdt_select_mode_for_ADC_mvm();
 }
 
 void fast_mvm_OFF(RPI_modes *rpi) {
@@ -508,7 +508,7 @@ void fast_mvm_OFF(RPI_modes *rpi) {
     spdt_select_mode_H(&rpi->reg);
     reg_update(&rpi->reg);
     
-    spdt_select_mode_for_ADC_wr(&rpi->reg);
+    spdt_select_mode_for_ADC_wr();
 }
 
 void fast_mvm(RPI_modes *rpi, uint16_t *vDAC_mas, uint16_t tms, uint16_t tus, 
