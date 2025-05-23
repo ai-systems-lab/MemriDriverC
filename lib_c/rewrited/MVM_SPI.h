@@ -32,8 +32,5 @@ void key_set_MVM_off(void);
 void mwm_dac_pd_on(void);
 void mwm_dac_pd_off(void);
 
-// Дополнительные функции режимов
-void set_mode_0(void);
-void set_mode_1(void);
 
 #endif // SPI_DRIVER_H

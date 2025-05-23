@@ -233,15 +233,15 @@ void close_spi() {
 }
 
 // Тестовая функция (аналог if __name__ == "__main__")
-int main() {
-    printf("\n===== Инициализация SPI =====\n");
-    init_spi(SPI_BUS, SPI_CHANNEL, 0, SPI_SPEED);
+// int main() {
+//     printf("\n===== Инициализация SPI =====\n");
+//     init_spi(SPI_BUS, SPI_CHANNEL, 0, SPI_SPEED);
     
-    // Тест из Python: test.mvm_dac(675, 3); test.mvm_dac(0, 0);
-    printf("\n===== Тест MVM DAC =====\n");
-    mvm_dac(675, 3);
-    mvm_dac(0, 0);
+//     // Тест из Python: test.mvm_dac(675, 3); test.mvm_dac(0, 0);
+//     printf("\n===== Тест MVM DAC =====\n");
+//     mvm_dac(675, 3);
+//     mvm_dac(0, 0);
     
-    close_spi();
-    return 0;
-}
+//     close_spi();
+//     return 0;
+// }
