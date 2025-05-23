@@ -360,6 +360,24 @@ void mode_mvm(RPI_modes *rpi, uint16_t *vDAC_mas, uint16_t tms, uint16_t tus,
             mask_bytes[i] |= (mask[i * 8 + j] << j);
         }
     }
+
+    // Открываем файл для записи (режим "a" — дописывать в конец)
+    FILE *log_file = fopen("mvm_mask_debug.log", "a");
+    if (log_file) {
+        fprintf(log_file, "--- MVM Mask Debug ---\n");
+        
+        // Выводим маску для каждого блока
+        for (int i = 0; i < 4; i++) {
+            fprintf(log_file, "Block %d: 0x%02X (", i, mask_bytes[i]);
+            
+            // Выводим биты в двоичном виде (для наглядности)
+            for (int j = 7; j >= 0; j--) {
+                fprintf(log_file, "%d", (mask_bytes[i] >> j) & 1);
+            }
+            fprintf(log_file, ")\n");
+        }
+        fclose(log_file);
+    }
     
     for (int i = 0; i < 4; i++) {
         bl_key_cs_L(&rpi->reg, i);
@@ -581,16 +599,17 @@ void fast_mvm(RPI_modes *rpi, uint16_t *vDAC_mas, uint16_t tms, uint16_t tus,
     *ret_id = id;
 }
 
-// int main() {
-//     wiringPiSetupGpio();
+int main() {
+    wiringPiSetupGpio();
     
-//     RPI_modes rpi;
-//     RPI_modes_init(&rpi);
+    RPI_modes rpi;
+    RPI_modes_init(&rpi);
     
-//     uint16_t result, ret_id;
-//     mode_7(&rpi, 245, 1, 0, 0, 123, 0, 0, &result, &ret_id);
-//     printf("Result: %d, ID: %d\n", result, ret_id);
+    uint16_t result, ret_id;
+    //0, 0, 0, 0, 123, 1,5
+    mode_7(&rpi, 0, 0, 0, 0, 123, 1, 5, &result, &ret_id);
+    printf("Result: %d, ID: %d\n", result, ret_id);
     
-//     return 0;
-// }
+    return 0;
+}
 //gcc -shared -o libmvmdriver.so -fPIC rpi_modes.c MVM_SPI.c r595hc.c -lwiringPi
