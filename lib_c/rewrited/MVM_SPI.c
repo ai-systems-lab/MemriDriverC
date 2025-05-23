@@ -115,8 +115,8 @@ void spi_writebytes(uint8_t *data, int len) {
         fprintf(stderr, "ERROR: Ошибка передачи SPI\n");
     }
 
-    digitalWrite(CS_PIN, HIGH);
-    usleep(10);
+    // digitalWrite(CS_PIN, HIGH);
+    // usleep(10);
 }
 
 // Чтение данных по SPI
@@ -144,8 +144,8 @@ void spi_readbytes(uint8_t *data, int len) {
         .cs_change = 0
     };
 
-    digitalWrite(CS_PIN, LOW);
-    usleep(10);
+    // digitalWrite(CS_PIN, LOW);
+    // usleep(10);
 
     int ret = ioctl(spi_fd, SPI_IOC_MESSAGE(1), &spi);
     if (ret < 0) {
