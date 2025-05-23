@@ -1,0 +1,188 @@
+rpi_modes.c:11:5: error: unknown type name ‘SPI_send’
+   11 |     SPI_send mvm_spi;
+      |     ^~~~~~~~
+rpi_modes.c: In function ‘RPI_modes_init’:
+rpi_modes.c:16:5: warning: implicit declaration of function ‘SPI_send_init’ [-Wimplicit-function-declaration]
+   16 |     SPI_send_init(&rpi->mvm_spi);
+      |     ^~~~~~~~~~~~~
+rpi_modes.c: In function ‘mode_7’:
+rpi_modes.c:41:9: warning: implicit declaration of function ‘set_mode_1’ [-Wimplicit-function-declaration]
+   41 |         set_mode_1(&rpi->mvm_spi);
+      |         ^~~~~~~~~~
+rpi_modes.c:91:5: warning: implicit declaration of function ‘set_mode_0’ [-Wimplicit-function-declaration]
+   91 |     set_mode_0(&rpi->mvm_spi);
+      |     ^~~~~~~~~~
+rpi_modes.c:92:12: warning: passing argument 1 of ‘wr_dac’ makes integer from pointer without a cast [-Wint-conversion]
+   92 |     wr_dac(&rpi->mvm_spi, vDAC);
+      |            ^~~~~~~~~~~~~
+      |            |
+      |            int *
+In file included from rpi_modes.c:8:
+MVM_SPI.c:181:22: note: expected ‘uint16_t’ {aka ‘short unsigned int’} but argument is of type ‘int *’
+  181 | void wr_dac(uint16_t bitvalue) {
+      |             ~~~~~~~~~^~~~~~~~
+rpi_modes.c:92:5: error: too many arguments to function ‘wr_dac’
+   92 |     wr_dac(&rpi->mvm_spi, vDAC);
+      |     ^~~~~~
+MVM_SPI.c:181:6: note: declared here
+  181 | void wr_dac(uint16_t bitvalue) {
+      |      ^~~~~~
+rpi_modes.c:107:12: warning: passing argument 1 of ‘wr_dac’ makes integer from pointer without a cast [-Wint-conversion]
+  107 |     wr_dac(&rpi->mvm_spi, 0);
+      |            ^~~~~~~~~~~~~
+      |            |
+      |            int *
+MVM_SPI.c:181:22: note: expected ‘uint16_t’ {aka ‘short unsigned int’} but argument is of type ‘int *’
+  181 | void wr_dac(uint16_t bitvalue) {
+      |             ~~~~~~~~~^~~~~~~~
+rpi_modes.c:107:5: error: too many arguments to function ‘wr_dac’
+  107 |     wr_dac(&rpi->mvm_spi, 0);
+      |     ^~~~~~
+MVM_SPI.c:181:6: note: declared here
+  181 | void wr_dac(uint16_t bitvalue) {
+      |      ^~~~~~
+rpi_modes.c:125:12: warning: passing argument 1 of ‘wr_dac’ makes integer from pointer without a cast [-Wint-conversion]
+  125 |     wr_dac(&rpi->mvm_spi, 246);
+      |            ^~~~~~~~~~~~~
+      |            |
+      |            int *
+MVM_SPI.c:181:22: note: expected ‘uint16_t’ {aka ‘short unsigned int’} but argument is of type ‘int *’
+  181 | void wr_dac(uint16_t bitvalue) {
+      |             ~~~~~~~~~^~~~~~~~
+rpi_modes.c:125:5: error: too many arguments to function ‘wr_dac’
+  125 |     wr_dac(&rpi->mvm_spi, 246);
+      |     ^~~~~~
+MVM_SPI.c:181:6: note: declared here
+  181 | void wr_dac(uint16_t bitvalue) {
+      |      ^~~~~~
+rpi_modes.c:152:12: warning: passing argument 1 of ‘wr_dac’ makes integer from pointer without a cast [-Wint-conversion]
+  152 |     wr_dac(&rpi->mvm_spi, 0);
+      |            ^~~~~~~~~~~~~
+      |            |
+      |            int *
+MVM_SPI.c:181:22: note: expected ‘uint16_t’ {aka ‘short unsigned int’} but argument is of type ‘int *’
+  181 | void wr_dac(uint16_t bitvalue) {
+      |             ~~~~~~~~~^~~~~~~~
+rpi_modes.c:152:5: error: too many arguments to function ‘wr_dac’
+  152 |     wr_dac(&rpi->mvm_spi, 0);
+      |     ^~~~~~
+MVM_SPI.c:181:6: note: declared here
+  181 | void wr_dac(uint16_t bitvalue) {
+      |      ^~~~~~
+rpi_modes.c: In function ‘mode_9’:
+rpi_modes.c:259:12: warning: passing argument 1 of ‘wr_dac’ makes integer from pointer without a cast [-Wint-conversion]
+  259 |     wr_dac(&rpi->mvm_spi, vDAC);
+      |            ^~~~~~~~~~~~~
+      |            |
+      |            int *
+MVM_SPI.c:181:22: note: expected ‘uint16_t’ {aka ‘short unsigned int’} but argument is of type ‘int *’
+  181 | void wr_dac(uint16_t bitvalue) {
+      |             ~~~~~~~~~^~~~~~~~
+rpi_modes.c:259:5: error: too many arguments to function ‘wr_dac’
+  259 |     wr_dac(&rpi->mvm_spi, vDAC);
+      |     ^~~~~~
+MVM_SPI.c:181:6: note: declared here
+  181 | void wr_dac(uint16_t bitvalue) {
+      |      ^~~~~~
+rpi_modes.c:282:12: warning: passing argument 1 of ‘wr_dac’ makes integer from pointer without a cast [-Wint-conversion]
+  282 |     wr_dac(&rpi->mvm_spi, 0);
+      |            ^~~~~~~~~~~~~
+      |            |
+      |            int *
+MVM_SPI.c:181:22: note: expected ‘uint16_t’ {aka ‘short unsigned int’} but argument is of type ‘int *’
+  181 | void wr_dac(uint16_t bitvalue) {
+      |             ~~~~~~~~~^~~~~~~~
+rpi_modes.c:282:5: error: too many arguments to function ‘wr_dac’
+  282 |     wr_dac(&rpi->mvm_spi, 0);
+      |     ^~~~~~
+MVM_SPI.c:181:6: note: declared here
+  181 | void wr_dac(uint16_t bitvalue) {
+      |      ^~~~~~
+rpi_modes.c: In function ‘mode_mvm’:
+rpi_modes.c:359:29: warning: passing argument 1 of ‘key_set_MVM_on_mask’ makes integer from pointer without a cast [-Wint-conversion]
+  359 |         key_set_MVM_on_mask(&rpi->mvm_spi, mask_bytes[i]);
+      |                             ^~~~~~~~~~~~~
+      |                             |
+      |                             int *
+MVM_SPI.c:201:34: note: expected ‘uint8_t’ {aka ‘unsigned char’} but argument is of type ‘int *’
+  201 | void key_set_MVM_on_mask(uint8_t mask) {
+      |                          ~~~~~~~~^~~~
+rpi_modes.c:359:9: error: too many arguments to function ‘key_set_MVM_on_mask’
+  359 |         key_set_MVM_on_mask(&rpi->mvm_spi, mask_bytes[i]);
+      |         ^~~~~~~~~~~~~~~~~~~
+MVM_SPI.c:201:6: note: declared here
+  201 | void key_set_MVM_on_mask(uint8_t mask) {
+      |      ^~~~~~~~~~~~~~~~~~~
+rpi_modes.c:391:21: warning: passing argument 1 of ‘mvm_dac’ makes integer from pointer without a cast [-Wint-conversion]
+  391 |             mvm_dac(&rpi->mvm_spi, vDAC_mas[j + (8 * i)], j);
+      |                     ^~~~~~~~~~~~~
+      |                     |
+      |                     int *
+MVM_SPI.c:173:23: note: expected ‘uint16_t’ {aka ‘short unsigned int’} but argument is of type ‘int *’
+  173 | void mvm_dac(uint16_t bitvalue, uint8_t channel) {
+      |              ~~~~~~~~~^~~~~~~~
+rpi_modes.c:391:13: error: too many arguments to function ‘mvm_dac’
+  391 |             mvm_dac(&rpi->mvm_spi, vDAC_mas[j + (8 * i)], j);
+      |             ^~~~~~~
+MVM_SPI.c:173:6: note: declared here
+  173 | void mvm_dac(uint16_t bitvalue, uint8_t channel) {
+      |      ^~~~~~~
+rpi_modes.c:418:21: warning: passing argument 1 of ‘mvm_dac’ makes integer from pointer without a cast [-Wint-conversion]
+  418 |             mvm_dac(&rpi->mvm_spi, 0, j);
+      |                     ^~~~~~~~~~~~~
+      |                     |
+      |                     int *
+MVM_SPI.c:173:23: note: expected ‘uint16_t’ {aka ‘short unsigned int’} but argument is of type ‘int *’
+  173 | void mvm_dac(uint16_t bitvalue, uint8_t channel) {
+      |              ~~~~~~~~~^~~~~~~~
+rpi_modes.c:418:13: error: too many arguments to function ‘mvm_dac’
+  418 |             mvm_dac(&rpi->mvm_spi, 0, j);
+      |             ^~~~~~~
+MVM_SPI.c:173:6: note: declared here
+  173 | void mvm_dac(uint16_t bitvalue, uint8_t channel) {
+      |      ^~~~~~~
+rpi_modes.c: In function ‘fast_mvm_ON’:
+rpi_modes.c:464:24: warning: passing argument 1 of ‘key_set_MVM_on’ makes integer from pointer without a cast [-Wint-conversion]
+  464 |         key_set_MVM_on(&rpi->mvm_spi);
+      |                        ^~~~~~~~~~~~~
+      |                        |
+      |                        int *
+MVM_SPI.c:206:29: note: expected ‘uint8_t’ {aka ‘unsigned char’} but argument is of type ‘int *’
+  206 | void key_set_MVM_on(uint8_t mask) {
+      |                     ~~~~~~~~^~~~
+rpi_modes.c: In function ‘fast_mvm’:
+rpi_modes.c:524:21: warning: passing argument 1 of ‘mvm_dac’ makes integer from pointer without a cast [-Wint-conversion]
+  524 |             mvm_dac(&rpi->mvm_spi, vDAC_mas[j + (8 * i)], j);
+      |                     ^~~~~~~~~~~~~
+      |                     |
+      |                     int *
+MVM_SPI.c:173:23: note: expected ‘uint16_t’ {aka ‘short unsigned int’} but argument is of type ‘int *’
+  173 | void mvm_dac(uint16_t bitvalue, uint8_t channel) {
+      |              ~~~~~~~~~^~~~~~~~
+rpi_modes.c:524:13: error: too many arguments to function ‘mvm_dac’
+  524 |             mvm_dac(&rpi->mvm_spi, vDAC_mas[j + (8 * i)], j);
+      |             ^~~~~~~
+MVM_SPI.c:173:6: note: declared here
+  173 | void mvm_dac(uint16_t bitvalue, uint8_t channel) {
+      |      ^~~~~~~
+rpi_modes.c:548:21: warning: passing argument 1 of ‘mvm_dac’ makes integer from pointer without a cast [-Wint-conversion]
+  548 |             mvm_dac(&rpi->mvm_spi, 0, j);
+      |                     ^~~~~~~~~~~~~
+      |                     |
+      |                     int *
+MVM_SPI.c:173:23: note: expected ‘uint16_t’ {aka ‘short unsigned int’} but argument is of type ‘int *’
+  173 | void mvm_dac(uint16_t bitvalue, uint8_t channel) {
+      |              ~~~~~~~~~^~~~~~~~
+rpi_modes.c:548:13: error: too many arguments to function ‘mvm_dac’
+  548 |             mvm_dac(&rpi->mvm_spi, 0, j);
+      |             ^~~~~~~
+MVM_SPI.c:173:6: note: declared here
+  173 | void mvm_dac(uint16_t bitvalue, uint8_t channel) {
+      |      ^~~~~~~
+rpi_modes.c: At top level:
+rpi_modes.c:560:5: error: redefinition of ‘main’
+  560 | int main() {
+      |     ^~~~
+MVM_SPI.c:237:5: note: previous definition of ‘main’ with type ‘int()’
+  237 | int main() {
+      |     ^~~~
