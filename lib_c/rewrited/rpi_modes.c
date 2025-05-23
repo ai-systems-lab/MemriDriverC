@@ -47,7 +47,7 @@ void mode_7(RPI_modes *rpi, uint16_t vDAC, uint16_t tms, uint16_t tus, uint8_t r
     for (int i = 0; i < 4; i++) {
         bl_key_cs_L(&rpi->reg, i);
         reg_update(&rpi->reg);
-        set_mode_1();
+        //set_mode_1();
         key_set_MVM_off();
         bl_key_cs_H(&rpi->reg, i);
         reg_update(&rpi->reg);
@@ -77,7 +77,6 @@ void mode_7(RPI_modes *rpi, uint16_t vDAC, uint16_t tms, uint16_t tus, uint8_t r
         uint8_t bit1 = (wl >> 1) & 0b1;
         uint8_t bit2 = (wl >> 2) & 0b1;
         
-        printf("WL decomposition: wl=%d, bit0=%d, bit1=%d, bit2=%d\n", wl, bit0, bit1, bit2);
 
         digitalWrite(17, (wl & 0b1) ? HIGH : LOW);
         digitalWrite(27, (wl >> 1 & 0b1) ? HIGH : LOW);
@@ -367,24 +366,6 @@ void mode_mvm(RPI_modes *rpi, uint16_t *vDAC_mas, uint16_t tms, uint16_t tus,
             mask_bytes[i] |= (mask[i * 8 + j] << j);
         }
     }
-
-    // Открываем файл для записи (режим "a" — дописывать в конец)
-    FILE *log_file = fopen("mvm_mask_debug.log", "a");
-    if (log_file) {
-        fprintf(log_file, "--- MVM Mask Debug ---\n");
-        
-        // Выводим маску для каждого блока
-        for (int i = 0; i < 4; i++) {
-            fprintf(log_file, "Block %d: 0x%02X (", i, mask_bytes[i]);
-            
-            // Выводим биты в двоичном виде (для наглядности)
-            for (int j = 7; j >= 0; j--) {
-                fprintf(log_file, "%d", (mask_bytes[i] >> j) & 1);
-            }
-            fprintf(log_file, ")\n");
-        }
-        fclose(log_file);
-    }
     
     for (int i = 0; i < 4; i++) {
         bl_key_cs_L(&rpi->reg, i);
@@ -606,17 +587,17 @@ void fast_mvm(RPI_modes *rpi, uint16_t *vDAC_mas, uint16_t tms, uint16_t tus,
     *ret_id = id;
 }
 
-int main() {
-    wiringPiSetupGpio();
+// int main() {
+//     wiringPiSetupGpio();
     
-    RPI_modes rpi;
-    RPI_modes_init(&rpi);
+//     RPI_modes rpi;
+//     RPI_modes_init(&rpi);
     
-    uint16_t result, ret_id;
-    //0, 0, 0, 0, 123, 1,5
-    mode_7(&rpi, 0, 0, 0, 0, 123, 2, 5, &result, &ret_id);
-    printf("Result: %d, ID: %d\n", result, ret_id);
+//     uint16_t result, ret_id;
+//     //0, 0, 0, 0, 123, 1,5
+//     mode_7(&rpi, 0, 0, 0, 0, 123, 2, 5, &result, &ret_id);
+//     printf("Result: %d, ID: %d\n", result, ret_id);
     
-    return 0;
-}
+//     return 0;
+// }
 //gcc -shared -o libmvmdriver.so -fPIC rpi_modes.c MVM_SPI.c r595hc.c -lwiringPi

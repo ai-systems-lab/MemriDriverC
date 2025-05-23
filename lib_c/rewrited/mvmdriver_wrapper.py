@@ -92,7 +92,7 @@ class MVMDriver:
         return result.value, id
 
 if __name__ == "__main__":
-    #driver = MVMDriver()
+    driver = MVMDriver()
 
     pdriver = RPi_modess()
 
@@ -100,14 +100,18 @@ if __name__ == "__main__":
     #result, id = driver.mode_7(0, 0, 0, 0, 123, 1,5)
     #print(f"mode_7 result: {result}, id: {id}")
 
-    # mas = [0,100,100,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0]
-    # start = time.time()
-    # for i in range(10000):
-    #     result, id = driver.mode_mvm(mas, 0,0,0,0,0,123)
-    # end = time.time()
+    mas = [0,100,100,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0]
+    start = time.time()
+    for i in range(10000):
+        result, id = driver.mode_mvm(mas, 0,0,0,0,0,123)
+    end = time.time()
+    print(f"time C result: {end-start}")
 
-    result, id = pdriver.mode_7(0, 0, 0, 0, 123, 1,5)
-    print(f"mode_7 result: {result}, id: {id}")
+    start = time.time()
+    for i in range(10000):
+        result, id = pdriver.mode_mvm(mas, 0,0,0,0,0,123)
+    end = time.time()
+    print(f"time Python result: {end-start}")
     # print(f"time:{start-end}")
     # # Тест mode_mvm
     # vDAC_mas = [100] * 32  # Пример массива

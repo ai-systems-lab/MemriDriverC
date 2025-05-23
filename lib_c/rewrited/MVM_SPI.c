@@ -23,35 +23,30 @@ void init_spi(int bus, int channel, int mode, int speed) {
     char spi_device[20];
     snprintf(spi_device, sizeof(spi_device), "/dev/spidev%d.%d", bus, channel);
 
-    if (wiringPiSetupGpio() == -1) {
+    if (wiringPiSetupPinType(WPI_PIN_BCM) == -1) {
         fprintf(stderr, "ERROR: Не удалось инициализировать wiringPi\n");
         exit(1);
     }
 
     pinMode(CS_PIN, OUTPUT);
     digitalWrite(CS_PIN, HIGH);
-    printf("Настроен CS на GPIO%d\n", CS_PIN);
 
     spi_fd = open(spi_device, O_RDWR);
     if (spi_fd < 0) {
         fprintf(stderr, "ERROR: Не удалось открыть %s\n", spi_device);
         exit(1);
     }
-    printf("Открыто SPI устройство: %s\n", spi_device);
 
     if (ioctl(spi_fd, SPI_IOC_WR_MODE, &mode) < 0) {
         fprintf(stderr, "ERROR: Не удалось установить режим SPI\n");
         exit(1);
     }
     current_spi_mode = mode;
-    printf("Режим SPI: %d (CPOL=%d, CPHA=%d)\n", 
-           mode, (mode >> 1) & 0x01, mode & 0x01);
 
     if (ioctl(spi_fd, SPI_IOC_WR_MAX_SPEED_HZ, &speed) < 0) {
         fprintf(stderr, "ERROR: Не удалось установить скорость SPI\n");
         exit(1);
     }
-    printf("Скорость SPI: %d Hz (%.1f MHz)\n", speed, speed/1000000.0);
 
     uint8_t bits = 8;
     if (ioctl(spi_fd, SPI_IOC_WR_BITS_PER_WORD, &bits) < 0) {
@@ -66,8 +61,6 @@ void set_spi_mode(uint8_t mode) {
         return;
     }
 
-    digitalWrite(CS_PIN, HIGH);
-    usleep(10);
 
     if (ioctl(spi_fd, SPI_IOC_WR_MODE, &mode) < 0) {
         perror("Ошибка смены режима SPI");
@@ -84,8 +77,6 @@ void set_spi_mode(uint8_t mode) {
         fprintf(stderr, "Режим не изменился! Текущий: %d\n", read_mode);
     } else {
         current_spi_mode = mode;
-        printf("Режим SPI изменен на %d (CPOL=%d, CPHA=%d)\n",
-               mode, (mode >> 1) & 0x01, mode & 0x01);
     }
 }
 
@@ -104,11 +95,6 @@ void spi_writebytes(uint8_t *data, int len) {
     digitalWrite(CS_PIN, LOW);
     usleep(10);
 
-    printf("Отправка %d байт в режиме %d: [", len, current_spi_mode);
-    for (int i = 0; i < len; i++) {
-        printf("0x%02X%s", data[i], (i < len-1) ? ", " : "");
-    }
-    printf("]\n");
 
     if (ioctl(spi_fd, SPI_IOC_MESSAGE(1), &spi) < 0) {
         fprintf(stderr, "ERROR: Ошибка передачи SPI\n");
@@ -150,7 +136,6 @@ void spi_readbytes(uint8_t *data, int len) {
     if (ret < 0) {
         perror("Ошибка SPI чтения");
     } else if (ret != len) {
-        fprintf(stderr, "Прочитано %d байт из %d ожидаемых\n", ret, len);
     } else {
         memcpy(data, rx_buf, len);
     }
@@ -227,7 +212,6 @@ void mwm_dac_pd_off() {
 void close_spi() {
     if (spi_fd >= 0) {
         close(spi_fd);
-        printf("SPI устройство закрыто\n");
     }
 }
 
