@@ -5,7 +5,7 @@
 #include <stdint.h>
 #include <unistd.h>
 #include "r595hc.c"
-#include "MVM_SPI.c"
+#include "MVM_SPI.h"
 
 typedef struct {
     SPI_send mvm_spi;

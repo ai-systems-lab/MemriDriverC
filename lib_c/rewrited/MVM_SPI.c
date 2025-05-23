@@ -17,8 +17,13 @@
 #define SPI_SPEED   15000000    // Скорость 15 МГц как в Python коде
 
 // Глобальные переменные
-int spi_fd;
 int current_spi_mode;
+
+typedef struct {
+    int spi_fd;
+    void (*write)(uint8_t *data, int len);
+    void (*read)(uint8_t *data, int len);
+} SPI_send;
 
 // Инициализация SPI
 void init_spi(int bus, int channel, int mode, int speed) {
