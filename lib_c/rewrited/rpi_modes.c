@@ -15,6 +15,7 @@ typedef struct {
 void RPI_modes_init(RPI_modes *rpi) {
     SPI_send_init(&rpi->mvm_spi);
     RegControl595_init(&rpi->reg);
+    init_spi(SPI_BUS, SPI_CHANNEL,0, SPI_SPEED);
 
     for (int i = 5; i <= 8; i++) {
         digitalWrite(i, LOW);
