@@ -604,4 +604,5 @@ for (int i = 0; i < 10; i++) {  // Пример: 10 итераций
     
 //     return 0;
 // }
-//gcc -shared -o libmvmdriver.so -fPIC rpi_modes.c MVM_SPI.c r595hc.c -lwiringPi
+//gcc -shared -o libmvmdriver.so -fPIC rpi_modes.c MVM_SPI.c r595hc.c -lwiringPi компил в либу
+//gcc -o mvm_app rpi_modes.c MVM_SPI.c r595hc.c -lwiringPi компил в исп прил 
