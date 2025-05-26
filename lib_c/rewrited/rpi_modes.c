@@ -595,7 +595,11 @@ void fast_mvm(RPI_modes *rpi, uint16_t *vDAC_mas, uint16_t tms, uint16_t tus,
     
 //     uint16_t result, ret_id;
 //     //0, 0, 0, 0, 123, 1,5
-//     mode_7(&rpi, 0, 0, 0, 0, 123, 2, 5, &result, &ret_id);
+for (int i = 0; i < 10; i++) {  // Пример: 10 итераций
+    mode_7(&rpi, 0, 0, 0, 0, 123, 1, 5, &result, &ret_id);
+    printf("Iteration %d: Result: %d, ID: %d\n", i, result, ret_id);
+    
+}
 //     printf("Result: %d, ID: %d\n", result, ret_id);
     
 //     return 0;
