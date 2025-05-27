@@ -11,14 +11,36 @@
 #include "MVM_SPI.h"
 
 // Глобальные переменные
-static int spi_fd;
-static int current_spi_mode;
+static int spi_fd;  // Файловый дескриптор SPI устройства
+static int current_spi_mode; // Текущий режим SPI (0, 1, 2, 3)
 
+/**
+ * @brief Инициализация структуры SPI_send
+ * @param spi Указатель на структуру SPI_send для инициализации
+ * 
+ * Функция устанавливает начальное значение файлового дескриптора в -1,
+ * что означает, что SPI еще не инициализирован.
+ */
 void SPI_send_init(SPI_send *spi) {
     spi->spi_fd = -1;
 }
 
-// Инициализация SPI
+/**
+ * @brief Инициализация SPI интерфейса
+ * @param bus Номер SPI шины (обычно 0)
+ * @param channel Номер канала SPI (0 или 1)
+ * @param mode Режим SPI (0-3)
+ * @param speed Скорость SPI в Гц
+ * 
+ * Функция выполняет:
+ * 1. Инициализацию wiringPi с нумерацией BCM
+ * 2. Открытие SPI устройства
+ * 3. Установку режима SPI
+ * 4. Установку скорости SPI
+ * 5. Установку размера слова (8 бит)
+ * 
+ * В случае ошибки функция завершает программу с кодом 1.
+ */
 void init_spi(int bus, int channel, int mode, int speed) {
     char spi_device[20];
     snprintf(spi_device, sizeof(spi_device), "/dev/spidev%d.%d", bus, channel);
@@ -27,9 +49,6 @@ void init_spi(int bus, int channel, int mode, int speed) {
         fprintf(stderr, "ERROR: Не удалось инициализировать wiringPi\n");
         exit(1);
     }
-
-    //pinMode(CS_PIN, OUTPUT);
-    //digitalWrite(CS_PIN, HIGH);
 
     spi_fd = open(spi_device, O_RDWR);
     if (spi_fd < 0) {
@@ -54,7 +73,19 @@ void init_spi(int bus, int channel, int mode, int speed) {
     }
 }
 
-// Установка режима SPI
+/**
+ * @brief Установка режима SPI
+ * @param mode Режим SPI (0-3)
+ * 
+ * Функция изменяет текущий режим SPI и проверяет, что изменение
+ * действительно произошло. В случае ошибки выводит сообщение в stderr.
+ * 
+ * Режимы SPI:
+ * - Mode 0: CPOL=0, CPHA=0
+ * - Mode 1: CPOL=0, CPHA=1
+ * - Mode 2: CPOL=1, CPHA=0
+ * - Mode 3: CPOL=1, CPHA=1
+ */
 void set_spi_mode(uint8_t mode) {
     if (spi_fd < 0) {
         fprintf(stderr, "SPI не инициализирован!\n");
@@ -80,7 +111,14 @@ void set_spi_mode(uint8_t mode) {
     }
 }
 
-// Отправка данных по SPI
+/**
+ * @brief Запись данных по SPI
+ * @param data Указатель на буфер с данными для отправки
+ * @param len Количество байт для отправки
+ * 
+ * Функция выполняет синхронную передачу данных по SPI без чтения ответа.
+ * Использует структуру spi_ioc_transfer для настройки параметров передачи.
+ */
 void spi_writebytes(uint8_t *data, int len) {
     struct spi_ioc_transfer spi = {
         .tx_buf = (unsigned long)data,
@@ -92,19 +130,21 @@ void spi_writebytes(uint8_t *data, int len) {
         .cs_change = 0
     };
 
-    //digitalWrite(CS_PIN, LOW);
-    //usleep(10);
-
-
     if (ioctl(spi_fd, SPI_IOC_MESSAGE(1), &spi) < 0) {
         fprintf(stderr, "ERROR: Ошибка передачи SPI\n");
     }
-
-    // digitalWrite(CS_PIN, HIGH);
-    // usleep(10);
 }
 
-// Чтение данных по SPI
+/**
+ * @brief Чтение данных по SPI
+ * @param data Указатель на буфер для принятых данных
+ * @param len Количество байт для чтения
+ * 
+ * Функция выполняет синхронное чтение данных по SPI, передавая при этом
+ * байты 0xFF. Использует отдельные буферы для передачи и приема.
+ * 
+ * После чтения освобождает выделенную память.
+ */
 void spi_readbytes(uint8_t *data, int len) {
     uint8_t *tx_buf = malloc(len);
     uint8_t *rx_buf = malloc(len);

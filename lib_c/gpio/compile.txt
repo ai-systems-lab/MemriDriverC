@@ -1,1 +1,0 @@
-gcc -shared -o libreg_control_595.so -fPIC reg_control_595.c gpio_control.c -lgpiod

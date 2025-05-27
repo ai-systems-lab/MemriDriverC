@@ -1,6 +1,0 @@
-python3 setup.py build
-
-pip install -e .
-
-#sudo python3 setup.py install
-
