@@ -28,8 +28,8 @@ void init_spi(int bus, int channel, int mode, int speed) {
         exit(1);
     }
 
-    pinMode(CS_PIN, OUTPUT);
-    digitalWrite(CS_PIN, HIGH);
+    //pinMode(CS_PIN, OUTPUT);
+    //digitalWrite(CS_PIN, HIGH);
 
     spi_fd = open(spi_device, O_RDWR);
     if (spi_fd < 0) {
@@ -92,7 +92,7 @@ void spi_writebytes(uint8_t *data, int len) {
         .cs_change = 0
     };
 
-    digitalWrite(CS_PIN, LOW);
+    //digitalWrite(CS_PIN, LOW);
     //usleep(10);
 
 
@@ -140,7 +140,7 @@ void spi_readbytes(uint8_t *data, int len) {
         memcpy(data, rx_buf, len);
     }
 
-    digitalWrite(CS_PIN, HIGH);
+    //digitalWrite(CS_PIN, HIGH);
     free(tx_buf);
     free(rx_buf);
 }

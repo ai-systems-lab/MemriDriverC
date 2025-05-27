@@ -356,7 +356,7 @@ class RPI_modes():
         
         
         mask = list(map( lambda x: int(x), np.where(np.array(vDAC_mas) > 0, 1, 0)))  # create byte mask
-        print(mask)
+        # print(mask)
         mask_bytes = [
             sum(mask[i * 8 + j] << (j) for j in range(8))
             for i in range(4)

@@ -113,7 +113,7 @@ void mode_7(RPI_modes *rpi, uint16_t vDAC, uint16_t tms, uint16_t tus, uint8_t r
     digitalWrite(12, HIGH);
     
     // Wait
-    //usleep(tms * 1000 + tus);
+    //usleep(tms * 1000 + tus); sleep с переменными tms tus не трогать, возможно потом пригодится
     
     // Set ZERO on WR DAC
     wr_dac_cs_L(&rpi->reg);
@@ -587,22 +587,22 @@ void fast_mvm(RPI_modes *rpi, uint16_t *vDAC_mas, uint16_t tms, uint16_t tus,
     *ret_id = id;
 }
 
-// int main() {
-//     wiringPiSetupGpio();
+//  int main() {
+// //     wiringPiSetupGpio();
     
-//     RPI_modes rpi;
-//     RPI_modes_init(&rpi);
+//      RPI_modes rpi;
+//      RPI_modes_init(&rpi);
     
-//     uint16_t result, ret_id;
-//     //0, 0, 0, 0, 123, 1,5
-for (int i = 0; i < 10; i++) {  // Пример: 10 итераций
-    mode_7(&rpi, 0, 0, 0, 0, 123, 1, 5, &result, &ret_id);
-    //printf("Iteration %d: Result: %d, ID: %d\n", i, result, ret_id);
+//      uint16_t result, ret_id;
+// //     //0, 0, 0, 0, 123, 1,5
+// for (int i = 0; i < 10; i++) {  // Пример: 10 итераций
+//     mode_7(&rpi, 350, 0, 0, 0, 123, 0, 0, &result, &ret_id);
+//     //printf("Iteration %d: Result: %d, ID: %d\n", i, result, ret_id);
     
-}
-//     printf("Result: %d, ID: %d\n", result, ret_id);
-    
-//     return 0;
 // }
+// //     printf("Result: %d, ID: %d\n", result, ret_id);
+    
+// //     return 0;
+//  }
 //gcc -shared -o libmvmdriver.so -fPIC rpi_modes.c MVM_SPI.c r595hc.c -lwiringPi компил в либу
 //gcc -o mvm_app rpi_modes.c MVM_SPI.c r595hc.c -lwiringPi компил в исп прил 

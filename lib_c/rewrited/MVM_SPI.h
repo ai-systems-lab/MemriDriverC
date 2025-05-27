@@ -6,7 +6,7 @@
 // Конфигурация
 #define SPI_BUS         0
 #define SPI_CHANNEL     0
-#define CS_PIN         17
+//#define CS_PIN         17
 #define SPI_SPEED   15000000
 
 typedef struct {
