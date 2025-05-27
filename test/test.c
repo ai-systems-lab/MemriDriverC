@@ -1,6 +1,6 @@
 #include "src/r595hc.h"
 #include "src/MVM_SPI.h"
-#include "src/rpi_modes.c"
+#include "src/rpi_modes.h"
 
 int main() {
      wiringPiSetupGpio();

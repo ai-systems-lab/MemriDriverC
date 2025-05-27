@@ -1,28 +1,51 @@
-# MVM Driver Project
+# Проект MVM Driver
 
-This project provides a driver for MVM (Memristor Vector-Matrix) operations on Raspberry Pi.
+Данный проект предоставляет драйвер для реализации операций аналогового умножения в матрицах с использованием мемристоров (MVM — Memristor Vector-Matrix) на платформе Raspberry Pi. Он предназначен для управления цифровыми ключами, DAC, ADC и мультиплексорами с использованием интерфейсов GPIO и SPI.
 
-## Project Structure
+## Структура проекта
 
-- `src/` - Source code directory
-  - `r595hc.c` - Shift register control implementation
-  - `r595hc.h` - Shift register control header
-  - `rpi_modes.c` - Main MVM operation modes implementation
-  - `MVM_SPI.c` - SPI communication implementation
-  - `MVM_SPI.h` - SPI communication header
-- `test/` - Test programs
-  - `test.c` - Example test program
-- `lib/` - Compiled library output
-- `bin/` - Compiled test programs output
+- `src/` — исходный код:
+  - `r595hc.c`, `r595hc.h` — управление сдвиговыми регистрами (74HC595)
+  - `rpi_modes.c`, `rpi_modes.h` — реализация режимов работы (WR, RD, MVM и др.)
+  - `MVM_SPI.c`, `MVM_SPI.h` — взаимодействие через SPI, функции для DAC/ADC/ключей
+- `test/` — тестовые программы:
+  - `test.c` — пример C-программы
+  - `test.py` — пример Python-теста (если предусмотрен)
+- `lib/` — директория, куда помещается скомпилированная библиотека `.so`
+- `bin/` — директория, куда помещается скомпилированная тестовая программа
 
-## Dependencies
+## Зависимости
 
-- wiringPi library
-- Linux SPIdev interface
+- Raspberry Pi с ОС Linux
+- Библиотека `wiringPi`
+- Активированный интерфейс SPI (`/dev/spidev0.0` и т.п.)
 
-## Building
+## Сборка проекта
 
-To build the project:
+Для сборки проекта используется `Makefile`. Доступны следующие команды:
 
 ```bash
 make all
+```
+Собирает как библиотеку (`libmvmdriver.so`), так и тестовое приложение.
+
+```bash
+make lib
+```
+Собирает только библиотеку и помещает её в папку `lib/`.
+
+```bash
+make test_c
+```
+Собирает тестовую программу на C и помещает её в папку `bin/`.
+
+```bash
+make test_python
+```
+Запускает Python-скрипт `test/test.py`, если он присутствует.
+
+```bash
+make clean
+```
+Удаляет каталоги `lib/` и `bin/` со скомпилированными файлами.
+
