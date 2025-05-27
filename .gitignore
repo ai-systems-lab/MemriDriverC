@@ -4,3 +4,6 @@ gpio_c_pkg/build
 gpio_c_pkg/dist
 gpio_c_pkg/.pkg_venv
 gpio_c_pkg/gpio_module.egg*
+
+doc/ПЗ.docx
+
