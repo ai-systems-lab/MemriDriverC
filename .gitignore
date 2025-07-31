@@ -7,3 +7,7 @@ gpio_c_pkg/gpio_module.egg*
 
 doc/ПЗ.docx
 
+__pycache__/mvmdriver_wrapper.cpython-311.pyc
+lib/libmvmdriver.so
+test/__pycache__/test.cpython-311.pyc
+test/python/__pycache__/rpi_modes.cpython-311.pyc

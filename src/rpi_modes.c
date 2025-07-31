@@ -153,12 +153,14 @@ void mode_7(RPI_modes *rpi, uint16_t vDAC, uint16_t tms, uint16_t tus, uint8_t r
     adc_read();
     digitalWrite(25, HIGH);
     
+    long res = 0;
+
     for (int i = 0; i < 10; i++) {
         digitalWrite(25, LOW);
-        *result += adc_read();
+        res += adc_read();
         digitalWrite(25, HIGH);
     }
-    *result /= 10;
+    (*result) = res/10;
     
     // Set ZERO on WR DAC
     wr_dac_cs_L(&rpi->reg);
